@@ -52,17 +52,6 @@ class AppColors {
   static const Color gray800 = Color(0xFF242424);
   static const Color gray900 = Color(0xFF000000);
 
-  // SEMANTIC GRAY ALIASES
-  static const Color background = gray50;
-  static const Color surface = gray100;
-  static const Color surfaceVariant = gray200;
-  static const Color divider = gray300;
-  static const Color disabled = gray400;
-  static const Color placeholder = gray600;
-  static const Color textSecondary = gray700;
-  static const Color textPrimary = gray800;
-  static const Color textHighEmphasis = gray900;
-
   // HELPER METHODS
   static bool isLight(Color color) => color.computeLuminance() > 0.5;
   static bool isDark(Color color) => !isLight(color);
@@ -98,9 +87,6 @@ class LightThemeColors {
   static const Color backgroundInvert = AppColors.gray900;
   static const Color borderPrimary = AppColors.gray700;
   static const Color borderSecondary = AppColors.gray600;
-  static const Color iconDefault = AppColors.gray700;
-  static const Color iconDisabled = AppColors.gray400;
-  static const Color iconInvert = AppColors.gray50;
 }
 
 class DarkThemeColors {
@@ -112,9 +98,6 @@ class DarkThemeColors {
   static const Color backgroundInvert = AppColors.gray50;
   static const Color borderPrimary = AppColors.gray700;
   static const Color borderSecondary = AppColors.gray600;
-  static const Color iconDefault = AppColors.gray200;
-  static const Color iconDisabled = AppColors.gray600;
-  static const Color iconInvert = AppColors.gray800;
 }
 
 /// =========================
@@ -160,21 +143,6 @@ class ThemeColors {
     context,
     LightThemeColors.borderSecondary,
     DarkThemeColors.borderSecondary,
-  );
-  static Color iconDefault(BuildContext context) => _adaptive(
-    context,
-    LightThemeColors.iconDefault,
-    DarkThemeColors.iconDefault,
-  );
-  static Color iconDisabled(BuildContext context) => _adaptive(
-    context,
-    LightThemeColors.iconDisabled,
-    DarkThemeColors.iconDisabled,
-  );
-  static Color iconInvert(BuildContext context) => _adaptive(
-    context,
-    LightThemeColors.iconInvert,
-    DarkThemeColors.iconInvert,
   );
 
   static Color _adaptive(BuildContext context, Color light, Color dark) =>

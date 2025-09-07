@@ -168,8 +168,8 @@ class AppTypography {
 extension TextStyleX on TextStyle {
   TextStyle withColor(Color color) => copyWith(color: color);
 
-  TextStyle withAlpha(double alpha) =>
-      copyWith(color: color?.withValues(alpha: alpha));
+  TextStyle withAlpha(int alpha) =>
+      copyWith(color: color?.withValues(alpha: alpha / 255.0));
 }
 
 /// =========================

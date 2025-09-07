@@ -21,7 +21,7 @@ class AppSpacing {
   static const double s20 = 80; // 5XL
   static const double s24 = 96; // 6XL
 
-  // Quick spacing widgets
+  // Horizontal spacing widget
   static const Widget h1 = SizedBox(width: s1);
   static const Widget h2 = SizedBox(width: s2);
   static const Widget h3 = SizedBox(width: s3);
@@ -30,6 +30,7 @@ class AppSpacing {
   static const Widget h6 = SizedBox(width: s6);
   static const Widget h8 = SizedBox(width: s8);
 
+  // Vertical spacing widget
   static const Widget v1 = SizedBox(height: s1);
   static const Widget v2 = SizedBox(height: s2);
   static const Widget v3 = SizedBox(height: s3);
@@ -57,7 +58,7 @@ extension SpacingX on num {
   EdgeInsets get pl => EdgeInsets.only(left: toDouble());
   EdgeInsets get pr => EdgeInsets.only(right: toDouble());
 
-  // Margin shortcuts (same as padding, but clearer intent)
+  // Margin shortcuts
   EdgeInsets get m => EdgeInsets.all(toDouble());
   EdgeInsets get mh => EdgeInsets.symmetric(horizontal: toDouble());
   EdgeInsets get mv => EdgeInsets.symmetric(vertical: toDouble());
