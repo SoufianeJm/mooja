@@ -41,11 +41,27 @@ class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: AppRadius.lg.radius),
           elevation: 0,
           backgroundColor: isDark
-              ? LightThemeColors.backgroundPrimary
-              : DarkThemeColors.backgroundPrimary,
+              ? DarkThemeColors.backgroundInvert
+              : LightThemeColors.backgroundInvert,
           foregroundColor: isDark
-              ? LightThemeColors.textPrimary
-              : DarkThemeColors.textPrimary,
+              ? DarkThemeColors.textInvert
+              : LightThemeColors.textInvert,
+        ),
+      );
+
+  static FilledButtonThemeData _filledButtonTheme(bool isDark) =>
+      FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(60),
+          padding: 20.ph + 15.pv,
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.lg.radius),
+          elevation: 0,
+          backgroundColor: isDark
+              ? DarkThemeColors.backgroundSecondary
+              : LightThemeColors.backgroundSecondary,
+          foregroundColor: isDark
+              ? DarkThemeColors.textPrimary
+              : LightThemeColors.textPrimary,
         ),
       );
 
@@ -129,6 +145,7 @@ class AppTheme {
     scaffoldBackgroundColor: _lightColorScheme.surface,
     fontFamily: AppTypography.fontFamily,
     elevatedButtonTheme: _elevatedButtonTheme(false),
+    filledButtonTheme: _filledButtonTheme(false),
     textButtonTheme: _textButtonTheme(false),
     iconButtonTheme: _iconButtonTheme,
     inputDecorationTheme: _inputDecorationTheme(false),
@@ -142,6 +159,7 @@ class AppTheme {
     scaffoldBackgroundColor: _darkColorScheme.surface,
     fontFamily: AppTypography.fontFamily,
     elevatedButtonTheme: _elevatedButtonTheme(true),
+    filledButtonTheme: _filledButtonTheme(true),
     textButtonTheme: _textButtonTheme(true),
     iconButtonTheme: _iconButtonTheme,
     inputDecorationTheme: _inputDecorationTheme(true),
