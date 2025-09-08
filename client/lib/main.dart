@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'shared/themes/theme_exports.dart';
-import 'shared/widgets/buttons/app_button.dart';
+import 'shared/widgets/inputs/app_input.dart';
 
 void main() {
   runApp(const MyApp());
@@ -16,19 +16,34 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: ThemeMode.system,
-      home: const ButtonDemoScreen(),
+      home: const InputDemoScreen(),
     );
   }
 }
 
-class ButtonDemoScreen extends StatelessWidget {
-  const ButtonDemoScreen({super.key});
+class InputDemoScreen extends StatefulWidget {
+  const InputDemoScreen({super.key});
+
+  @override
+  State<InputDemoScreen> createState() => _InputDemoScreenState();
+}
+
+class _InputDemoScreenState extends State<InputDemoScreen> {
+  final TextEditingController _filledController = TextEditingController(text: 'hello@example.com');
+  final TextEditingController _errorController = TextEditingController(text: 'invalid');
+
+  @override
+  void dispose() {
+    _filledController.dispose();
+    _errorController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Button Variants Demo', style: AppTypography.h3SemiBold),
+        title: Text('Input Field Demo', style: AppTypography.h3SemiBold),
         actions: [
           IconButton(
             icon: Icon(context.isDark ? Icons.light_mode : Icons.dark_mode),
@@ -38,69 +53,104 @@ class ButtonDemoScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: AppSpacing.s5.p,
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Basic Variants', style: AppTypography.bodySubSemiBold),
+            Text('Input States', style: AppTypography.bodySubSemiBold),
             AppSpacing.v4,
-
-            // Primary Button
-            AppButton.primary(
-              text: 'Primary Button',
-              onPressed: () => print('Primary pressed'),
+            
+            // Default state
+            const AppInput(
+              label: 'Email',
+              hintText: 'Enter your email',
+              helperText: 'This is a hint text to help the user.',
             ),
-
-            AppSpacing.v3,
-
-            // Secondary Button
-            AppButton.secondary(
-              text: 'Secondary Button',
-              onPressed: () => print('Secondary pressed'),
+            
+            AppSpacing.v5,
+            
+            // Filled state
+            AppInput(
+              label: 'Filled Input',
+              controller: _filledController,
+              helperText: 'This field has content',
             ),
-
-            AppSpacing.v3,
-
-            // Tertiary Button
-            AppButton.tertiary(
-              text: 'Tertiary Button',
-              onPressed: () => print('Tertiary pressed'),
+            
+            AppSpacing.v5,
+            
+            // Error state
+            AppInput(
+              label: 'Error State',
+              controller: _errorController,
+              errorText: 'Please enter a valid email address',
             ),
-
+            
             AppSpacing.v6,
             const Divider(),
             AppSpacing.v6,
-
-            Text('With Icon & Alignment', style: AppTypography.bodySubSemiBold),
+            
+            Text('With Icons', style: AppTypography.bodySubSemiBold),
             AppSpacing.v4,
-
-            // Secondary with left icon and left aligned text (like logout)
-            AppButton.secondary(
-              text: 'Logout',
-              leftIcon: const Icon(Icons.logout),
-              textAlign: TextAlign.left,
-              onPressed: () => print('Logout pressed'),
+            
+            // With prefix icon
+            const AppInput(
+              label: 'Search',
+              hintText: 'Search here...',
+              prefixIcon: Icon(Icons.search),
             ),
-
+            
+            AppSpacing.v5,
+            
+            // With suffix icon
+            const AppInput(
+              label: 'Password',
+              hintText: 'Enter password',
+              obscureText: true,
+              suffixIcon: Icon(Icons.visibility),
+            ),
+            
+            AppSpacing.v5,
+            
+            // With both icons
+            const AppInput(
+              label: 'Amount',
+              hintText: '0.00',
+              prefixIcon: Icon(Icons.attach_money),
+              suffixIcon: Icon(Icons.calculate),
+              keyboardType: TextInputType.number,
+            ),
+            
             AppSpacing.v6,
             const Divider(),
             AppSpacing.v6,
-
-            Text('States', style: AppTypography.bodySubSemiBold),
+            
+            Text('Other Variations', style: AppTypography.bodySubSemiBold),
             AppSpacing.v4,
-
-            // Loading State
-            AppButton.primary(
-              text: 'Loading...',
-              isLoading: true,
-              onPressed: () {},
+            
+            // Disabled state
+            const AppInput(
+              label: 'Disabled',
+              hintText: 'This field is disabled',
+              enabled: false,
             ),
-
-            AppSpacing.v3,
-
-            // Disabled State
-            AppButton.primary(text: 'Disabled Button', onPressed: null),
+            
+            AppSpacing.v5,
+            
+            // Multiline
+            const AppInput(
+              label: 'Description',
+              hintText: 'Enter a description...',
+              maxLines: 3,
+            ),
+            
+            AppSpacing.v5,
+            
+            // Without label
+            const AppInput(
+              hintText: 'Input without label',
+              prefixIcon: Icon(Icons.person),
+            ),
           ],
         ),
       ),

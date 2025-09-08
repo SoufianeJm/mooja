@@ -91,8 +91,8 @@ class AppTheme {
       InputDecorationTheme(
         filled: true,
         fillColor: isDark
-            ? DarkThemeColors.backgroundSecondary.withValues(alpha: 0.5)
-            : LightThemeColors.backgroundSecondary.withValues(alpha: 0.5),
+            ? DarkThemeColors.backgroundSecondary
+            : LightThemeColors.backgroundSecondary,
         contentPadding: 20.ph + 15.pv,
         border: OutlineInputBorder(
           borderRadius: AppRadius.lg.radius,
@@ -116,7 +116,20 @@ class AppTheme {
         ),
         labelStyle: AppTypography.bodySubMedium,
         hintStyle: AppTypography.bodySubMedium.withAlpha(128),
-        errorStyle: AppTypography.caption2Medium,
+        errorStyle: AppTypography.caption2Medium.copyWith(
+          color: AppColors.red500,
+        ),
+        helperStyle: AppTypography.caption2Medium.copyWith(
+          color: isDark
+              ? DarkThemeColors.textSecondary
+              : LightThemeColors.textSecondary,
+        ),
+        prefixIconColor: isDark
+            ? DarkThemeColors.textSecondary
+            : LightThemeColors.textSecondary,
+        suffixIconColor: isDark
+            ? DarkThemeColors.textSecondary
+            : LightThemeColors.textSecondary,
       );
 
   // Chip Theme
