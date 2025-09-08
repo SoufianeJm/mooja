@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 class AppTypography {
   AppTypography._();
 
-  static const String fontFamily = 'General Sans';
+  static const String fontFamily = 'GeneralSans';
 
   // =========================
   // H1 - 26px
