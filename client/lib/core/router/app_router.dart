@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/intro/intro_page.dart';
 import '../../features/auth/login_page.dart';
+import '../../features/auth/signup_page.dart';
+import '../../features/auth/country_selection_page.dart';
 
 // Route path constants - single source of truth
 abstract class AppRoutes {
   // Public routes
   static const intro = '/intro';
   static const login = '/login';
+  static const signup = '/signup';
+  static const countrySelection = '/country-selection';
   
   // TODO: Add more routes as you build them
-  // Example: static const register = '/register';
   // Example: static const home = '/';
   // Example: static const profile = '/profile';
   // Example: static const protestDetails = '/protest/:id';
@@ -51,13 +54,19 @@ class AppRouter {
         builder: (context, state) => const LoginPage(),
       ),
       
+      GoRoute(
+        path: AppRoutes.signup,
+        name: 'signup',
+        builder: (context, state) => const SignupPage(),
+      ),
+      
+      GoRoute(
+        path: AppRoutes.countrySelection,
+        name: 'countrySelection',
+        builder: (context, state) => const CountrySelectionPage(),
+      ),
+      
       // TODO: Add more routes as you build screens
-      // Example for register page:
-      // GoRoute(
-      //   path: '/register',
-      //   name: 'register',
-      //   builder: (context, state) => const RegisterPage(),
-      // ),
       
       // Example for protected home route with nested routes:
       // GoRoute(
@@ -89,7 +98,8 @@ class AppRouter {
       // const publicRoutes = {
       //   AppRoutes.intro,
       //   AppRoutes.login,
-      //   '/register', '/forgot-password'
+      //   AppRoutes.signup,
+      //   '/forgot-password'
       // };
       // final isPublicRoute = publicRoutes.contains(state.matchedLocation);
       
@@ -141,15 +151,18 @@ extension NavigationExtensions on BuildContext {
   // Current navigation methods
   void goToLogin() => go(AppRoutes.login);
   void goToIntro() => go(AppRoutes.intro);
+  void goToSignup() => go(AppRoutes.signup);
+  void goToCountrySelection() => go(AppRoutes.countrySelection);
   
   // TODO: Add more navigation methods as you create screens
   // Example: void goHome() => go(AppRoutes.home);
-  // Example: void goToRegister() => go(AppRoutes.register);
   // Example: void goToProtest(String id) => go('/protest/$id');
   
   // Check current route
   bool get isLoginPage => GoRouterState.of(this).matchedLocation == AppRoutes.login;
   bool get isIntroPage => GoRouterState.of(this).matchedLocation == AppRoutes.intro;
+  bool get isSignupPage => GoRouterState.of(this).matchedLocation == AppRoutes.signup;
+  bool get isCountrySelectionPage => GoRouterState.of(this).matchedLocation == AppRoutes.countrySelection;
   
   // Get route parameters
   String? getParam(String name) => GoRouterState.of(this).pathParameters[name];

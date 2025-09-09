@@ -5,20 +5,22 @@ import '../../shared/widgets/inputs/app_input.dart';
 import '../../shared/widgets/app_chip.dart';
 import '../../core/router/app_router.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignupPage> createState() => _SignupPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  final _emailController = TextEditingController();
+class _SignupPageState extends State<SignupPage> {
+  final _organizationController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _organizationController.dispose();
+    _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -43,8 +45,8 @@ class _LoginPageState extends State<LoginPage> {
                     Transform.rotate(
                       angle: -10 * 3.14159 / 180,
                       child: AppChip(
-                        label: 'Login',
-                        backgroundColor: AppColors.lemon,
+                        label: 'Register',
+                        backgroundColor: AppColors.lavender,
                       ),
                     ),
 
@@ -52,19 +54,29 @@ class _LoginPageState extends State<LoginPage> {
 
                     // Title
                     Text(
-                      'Welcome back',
+                      'Create account',
                       style: AppTypography.h1SemiBold,
                       textAlign: TextAlign.center,
                     ),
 
                     16.v,
 
-                    // Email input
+                    // Organization name input
                     AppInput(
-                      label: 'Email',
-                      hintText: 'Enter your email',
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
+                      label: 'Organization name',
+                      hintText: 'Enter your organization name',
+                      controller: _organizationController,
+                      keyboardType: TextInputType.text,
+                    ),
+
+                    16.v,
+
+                    // Username input
+                    AppInput(
+                      label: 'Username',
+                      hintText: 'Choose a username',
+                      controller: _usernameController,
+                      keyboardType: TextInputType.text,
                     ),
 
                     16.v,
@@ -72,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                     // Password input
                     AppInput(
                       label: 'Password',
-                      hintText: 'Enter your password',
+                      hintText: 'Create a password',
                       controller: _passwordController,
                       obscureText: true,
                     ),
@@ -84,24 +96,19 @@ class _LoginPageState extends State<LoginPage> {
               Column(
                 children: [
                   AppButton.primary(
-                    text: 'Login',
+                    text: 'Continue',
                     onPressed: () {
-                      // TODO: Implement actual login logic with API
-                      // TODO: Navigate to home when home page is built
-                      // For now, just show success
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Login functionality coming soon'),
-                        ),
-                      );
+                      // TODO: Validate form fields before navigation
+                      // For now, navigate to country selection
+                      context.goToCountrySelection();
                     },
                     isFullWidth: true,
                   ),
 
                   AppButton.tertiary(
-                    text: 'Create an account',
+                    text: 'Already have an account? Log in',
                     onPressed: () {
-                      context.goToSignup();
+                      context.goToLogin();
                     },
                     isFullWidth: true,
                   ),
