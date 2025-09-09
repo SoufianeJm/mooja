@@ -38,7 +38,7 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           minimumSize: const Size.fromHeight(60),
           padding: 20.ph + 15.pv,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.lg.radius),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.md.radius),
           elevation: 0,
           backgroundColor: isDark
               ? DarkThemeColors.backgroundInvert
@@ -54,7 +54,7 @@ class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size.fromHeight(60),
           padding: 20.ph + 15.pv,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.lg.radius),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.md.radius),
           elevation: 0,
           backgroundColor: isDark
               ? DarkThemeColors.backgroundSecondary
@@ -70,7 +70,7 @@ class AppTheme {
         style: TextButton.styleFrom(
           minimumSize: const Size.fromHeight(60),
           padding: 20.ph + 15.pv,
-          shape: RoundedRectangleBorder(borderRadius: AppRadius.lg.radius),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.md.radius),
 
           foregroundColor: isDark
               ? DarkThemeColors.textPrimary
@@ -86,7 +86,6 @@ class AppTheme {
     ),
   );
 
-  // Input Decoration Theme
   static InputDecorationTheme _inputDecorationTheme(bool isDark) =>
       InputDecorationTheme(
         filled: true,
@@ -95,23 +94,23 @@ class AppTheme {
             : LightThemeColors.backgroundSecondary,
         contentPadding: 20.ph + 15.pv,
         border: OutlineInputBorder(
-          borderRadius: AppRadius.lg.radius,
+          borderRadius: AppRadius.md.radius,
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: AppRadius.lg.radius,
+          borderRadius: AppRadius.md.radius,
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: AppRadius.lg.radius,
+          borderRadius: AppRadius.md.radius,
           borderSide: BorderSide(color: AppColors.lemon, width: 1),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.lg.radius,
+          borderRadius: AppRadius.md.radius,
           borderSide: BorderSide(color: AppColors.red500, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: AppRadius.lg.radius,
+          borderRadius: AppRadius.md.radius,
           borderSide: BorderSide(color: AppColors.red500, width: 1),
         ),
         labelStyle: AppTypography.bodySubMedium,
@@ -132,7 +131,6 @@ class AppTheme {
             : LightThemeColors.textSecondary,
       );
 
-  // Chip Theme
   static ChipThemeData _chipTheme(bool isDark) => ChipThemeData(
     backgroundColor: isDark
         ? DarkThemeColors.backgroundSecondary
@@ -148,8 +146,6 @@ class AppTheme {
           : LightThemeColors.textPrimary,
     ),
   );
-
-  //Todo: we should add others based on whether we need them or no
 
   static ThemeData light() => ThemeData(
     useMaterial3: true,

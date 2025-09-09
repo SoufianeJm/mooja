@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../themes/theme_exports.dart';
 
-/// Reusable input field with focus effects and icon support
 class AppInput extends StatefulWidget {
   final String? label;
   final String? hintText;
@@ -42,73 +41,80 @@ class AppInput extends StatefulWidget {
   State<AppInput> createState() => _AppInputState();
 }
 
-class _AppInputState extends State<AppInput> {
+class _AppInputState extends State<AppInput>
+    with SingleTickerProviderStateMixin {
   final FocusNode _focusNode = FocusNode();
-  bool _isFocused = false;
   late TextEditingController _internalController;
   TextEditingController? _controller;
+  late AnimationController _animationController;
+  late Animation<double> _shadowAnimation;
 
   @override
   void initState() {
     super.initState();
-    _focusNode.addListener(_handleFocusChange);
 
-    // Setup controller
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 200),
+      vsync: this,
+    );
+
+    _shadowAnimation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
+
+    _focusNode.addListener(() {
+      if (_focusNode.hasFocus) {
+        _animationController.forward();
+      } else {
+        _animationController.reverse();
+      }
+    });
+
     if (widget.controller != null) {
       _controller = widget.controller;
     } else {
       _internalController = TextEditingController();
       _controller = _internalController;
     }
-    _controller!.addListener(_handleTextChange);
   }
 
   @override
   void dispose() {
-    _focusNode.removeListener(_handleFocusChange);
+    _animationController.dispose();
     _focusNode.dispose();
-    _controller?.removeListener(_handleTextChange);
     if (widget.controller == null) {
       _internalController.dispose();
     }
     super.dispose();
   }
 
-  void _handleFocusChange() {
-    setState(() {
-      _isFocused = _focusNode.hasFocus;
-    });
-  }
+  Color _getFillColor(BuildContext context) {
+    final theme = Theme.of(context);
+    final inputTheme = theme.inputDecorationTheme;
 
-  void _handleTextChange() {
-    setState(() {}); // Rebuild for opacity state
+    if (_focusNode.hasFocus) {
+      // White background on focus
+      return context.isDark
+          ? DarkThemeColors.backgroundPrimary
+          : LightThemeColors.backgroundPrimary;
+    }
+
+    return inputTheme.fillColor ??
+        (context.isDark
+            ? DarkThemeColors.backgroundSecondary
+            : LightThemeColors.backgroundSecondary);
   }
 
   @override
   Widget build(BuildContext context) {
     const double iconSize = 24.0;
 
-    final bool hasContent = _controller?.text.isNotEmpty ?? false;
-    final bool shouldHaveOpacity =
-        !_isFocused && !hasContent && widget.errorText == null;
-
-    // Main input container
-    final inputField = Container(
-      decoration: _isFocused && widget.errorText == null
-          ? BoxDecoration(
-              borderRadius: AppRadius.lg.radius,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.lemon.withValues(alpha: 0.25),
-                  blurRadius: 20,
-                  spreadRadius: 0,
-                ),
-              ],
-            )
-          : null,
-      child: Opacity(
-        opacity: shouldHaveOpacity ? 0.5 : 1.0,
-        child: TextFormField(
+    // TextField rebuilds only on focus change for fillColor
+    final textField = ListenableBuilder(
+      listenable: _focusNode,
+      builder: (context, child) {
+        return TextFormField(
           controller: _controller,
           focusNode: _focusNode,
           obscureText: widget.obscureText,
@@ -128,10 +134,7 @@ class _AppInputState extends State<AppInput> {
             fillColor: _getFillColor(context),
             prefixIcon: widget.prefixIcon != null
                 ? Padding(
-                    padding: const EdgeInsets.only(
-                      left: 20,
-                      right: 12,
-                    ), // Match Figma spacing
+                    padding: const EdgeInsets.only(left: 20, right: 12),
                     child: widget.prefixIcon,
                   )
                 : null,
@@ -139,16 +142,13 @@ class _AppInputState extends State<AppInput> {
                 ? const BoxConstraints(
                     minWidth: iconSize,
                     minHeight: iconSize,
-                    maxWidth: 56, // 24px icon + 32px total padding
+                    maxWidth: 56,
                     maxHeight: iconSize,
                   )
                 : null,
             suffixIcon: widget.suffixIcon != null
                 ? Padding(
-                    padding: const EdgeInsets.only(
-                      left: 12,
-                      right: 20,
-                    ), // Match Figma spacing
+                    padding: const EdgeInsets.only(left: 12, right: 20),
                     child: widget.suffixIcon,
                   )
                 : null,
@@ -156,19 +156,51 @@ class _AppInputState extends State<AppInput> {
                 ? const BoxConstraints(
                     minWidth: iconSize,
                     minHeight: iconSize,
-                    maxWidth: 56, // 24px icon + 32px total padding
+                    maxWidth: 56,
                     maxHeight: iconSize,
                   )
                 : null,
           ),
-        ),
-      ),
+        );
+      },
+    );
+
+    // Shadow and opacity animations only
+    final inputField = AnimatedBuilder(
+      animation: _animationController,
+      builder: (context, child) {
+        final hasContent = _controller?.text.isNotEmpty ?? false;
+        final isFocused = _focusNode.hasFocus;
+        final shouldFade =
+            !isFocused && !hasContent && widget.errorText == null;
+
+        return Container(
+          decoration: widget.errorText == null
+              ? BoxDecoration(
+                  borderRadius: AppRadius.md.radius,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.lemon.withValues(
+                        alpha: 0.25 * _shadowAnimation.value,
+                      ),
+                      blurRadius: 20 * _shadowAnimation.value,
+                    ),
+                  ],
+                )
+              : null,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: shouldFade ? 0.5 : 1.0,
+            child: child,
+          ),
+        );
+      },
+      child: textField,
     );
 
     if (widget.label != null) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             widget.label!,
@@ -183,26 +215,5 @@ class _AppInputState extends State<AppInput> {
     }
 
     return inputField;
-  }
-
-  Color? _getFillColor(BuildContext context) {
-    // Error state
-    if (widget.errorText != null) {
-      return context.isDark
-          ? DarkThemeColors.backgroundSecondary
-          : LightThemeColors.backgroundSecondary;
-    }
-
-    // Focused state
-    if (_isFocused) {
-      return context.isDark
-          ? DarkThemeColors.backgroundPrimary
-          : LightThemeColors.backgroundPrimary;
-    }
-
-    // Default state
-    return context.isDark
-        ? DarkThemeColors.backgroundSecondary
-        : LightThemeColors.backgroundSecondary;
   }
 }
