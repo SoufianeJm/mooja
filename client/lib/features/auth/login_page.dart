@@ -85,7 +85,12 @@ class _LoginPageState extends State<LoginPage> {
                   AppButton.primary(
                     text: 'Login',
                     onPressed: () {
-                      // TODO: Handle login
+                      // TODO: Implement actual login logic with API
+                      // TODO: Navigate to home when home page is built
+                      // For now, just show success
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Login functionality coming soon')),
+                      );
                     },
                     isFullWidth: true,
                   ),
@@ -93,7 +98,10 @@ class _LoginPageState extends State<LoginPage> {
                   AppButton.tertiary(
                     text: 'Create an account',
                     onPressed: () {
-                      // TODO: Navigate to signup
+                      // TODO: Navigate to register when register page is built
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Registration coming soon')),
+                      );
                     },
                     isFullWidth: true,
                   ),

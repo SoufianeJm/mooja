@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'shared/themes/theme_exports.dart';
-import 'features/intro/intro_page.dart';
+import 'core/router/app_router.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,13 +11,13 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'Mooja',
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
-      themeMode: ThemeMode.light,  // Default to light mode
-      debugShowCheckedModeBanner: false,  // Remove debug banner
-      home: const IntroPage(),
+      themeMode: ThemeMode.light,
+      debugShowCheckedModeBanner: false,
+      routerConfig: AppRouter.router,
     );
   }
 }

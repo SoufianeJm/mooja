@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../shared/themes/theme_exports.dart';
 import '../../shared/widgets/buttons/app_button.dart';
-import '../auth/login_page.dart';
+import '../../core/router/app_router.dart';
 
 class IntroPage extends StatelessWidget {
   const IntroPage({super.key});
@@ -49,7 +49,9 @@ class IntroPage extends StatelessWidget {
                     AppButton.primary(
                       text: 'Continue as a protestor',
                       onPressed: () {
-                        // TODO: Navigate to protestor flow
+                        // TODO: Navigate to protestor registration when built
+                        // For now, go to login
+                        context.goToLogin();
                       },
                       isFullWidth: true,
                     ),
@@ -59,12 +61,8 @@ class IntroPage extends StatelessWidget {
                     AppButton.secondary(
                       text: 'Continue as an organization',
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const LoginPage(),
-                          ),
-                        );
+                        // Navigate to organization login
+                        context.goToLogin();
                       },
                       isFullWidth: true,
                     ),
