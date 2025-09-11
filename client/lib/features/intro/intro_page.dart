@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../shared/themes/theme_exports.dart';
-import '../../shared/widgets/buttons/app_button.dart';
+import '../../core/themes/theme_exports.dart';
+import '../../core/widgets/buttons/app_button.dart';
 import '../../core/router/app_router.dart';
 
 class IntroPage extends StatelessWidget {
@@ -49,9 +49,8 @@ class IntroPage extends StatelessWidget {
                     AppButton.primary(
                       text: 'Continue as a protestor',
                       onPressed: () {
-                        // TODO: Navigate to protestor registration when built
-                        // For now, go to login
-                        context.goToLogin();
+                        // Navigate to country selection for protestor flow
+                        context.goToCountrySelection();
                       },
                       isFullWidth: true,
                     ),

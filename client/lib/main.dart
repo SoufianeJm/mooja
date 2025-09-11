@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'shared/themes/theme_exports.dart';
+import 'core/themes/theme_exports.dart';
 import 'core/router/app_router.dart';
 
 void main() {

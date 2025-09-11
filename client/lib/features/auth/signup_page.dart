@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../shared/themes/theme_exports.dart';
-import '../../shared/widgets/buttons/app_button.dart';
-import '../../shared/widgets/inputs/app_input.dart';
-import '../../shared/widgets/app_chip.dart';
+import '../../core/themes/theme_exports.dart';
+import '../../core/widgets/buttons/app_button.dart';
+import '../../core/widgets/inputs/app_input.dart';
+import '../../core/widgets/app_chip.dart';
 import '../../core/router/app_router.dart';
 
 class SignupPage extends StatefulWidget {

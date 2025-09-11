@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math' as math;
-import '../../shared/themes/theme_exports.dart';
-import '../../shared/widgets/buttons/app_button.dart';
-import '../../shared/widgets/inputs/app_input.dart';
-import '../../shared/widgets/app_chip.dart';
+import '../../core/themes/theme_exports.dart';
+import '../../core/widgets/buttons/app_button.dart';
+import '../../core/widgets/inputs/app_input.dart';
+import '../../core/widgets/app_chip.dart';
 import '../../core/constants/countries.dart';
+import '../../core/router/app_router.dart';
 
 class CountrySelectionPage extends StatefulWidget {
   const CountrySelectionPage({super.key});
@@ -19,7 +20,7 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
   static const double _listBottomPaddingClosed = 180;
   static const double _listBottomPaddingOpen = 20;
   static const double _gradientOverlayHeight = 100;
-  
+
   final _searchController = TextEditingController();
   Timer? _debounceTimer;
 
@@ -69,7 +70,7 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
   @override
   Widget build(BuildContext context) {
     final keyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
-    
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       body: SafeArea(
@@ -84,9 +85,7 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
                     16.v,
                     _buildSearchInput(),
                     8.v,
-                    Expanded(
-                      child: _buildCountryList(keyboardOpen),
-                    ),
+                    Expanded(child: _buildCountryList(keyboardOpen)),
                   ],
                 ),
               ),
@@ -97,7 +96,7 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
       ),
     );
   }
-  
+
   Widget _buildHeader() {
     return Column(
       children: [
@@ -105,10 +104,7 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
         // Rotated chip
         Transform.rotate(
           angle: -10 * math.pi / 180,
-          child: AppChip(
-            label: 'step 02',
-            backgroundColor: AppColors.lemon,
-          ),
+          child: AppChip(label: 'step 02', backgroundColor: AppColors.lemon),
         ),
         16.v,
         // Title
@@ -120,7 +116,7 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
       ],
     );
   }
-  
+
   Widget _buildSearchInput() {
     return AppInput(
       hintText: 'Search',
@@ -134,7 +130,7 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
       ),
     );
   }
-  
+
   Widget _buildCountryList(bool keyboardOpen) {
     return Stack(
       children: [
@@ -145,23 +141,17 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
       ],
     );
   }
-  
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.search_off,
-            size: 48,
-            color: AppColors.gray400,
-          ),
+          Icon(Icons.search_off, size: 48, color: AppColors.gray400),
           16.v,
           Text(
             'No countries found',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.gray600,
-            ),
+            style: AppTypography.bodyMedium.copyWith(color: AppColors.gray600),
           ),
           8.v,
           Text(
@@ -174,35 +164,31 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
       ),
     );
   }
-  
+
   Widget _buildCountryListView(bool keyboardOpen) {
     return ListView.separated(
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: EdgeInsets.only(
-        bottom: keyboardOpen ? _listBottomPaddingOpen : _listBottomPaddingClosed,
+        bottom: keyboardOpen
+            ? _listBottomPaddingOpen
+            : _listBottomPaddingClosed,
       ),
       itemCount: _filteredCountries.length,
       separatorBuilder: (context, index) => 8.v,
-      itemBuilder: (context, index) => _buildCountryItem(_filteredCountries[index]),
+      itemBuilder: (context, index) =>
+          _buildCountryItem(_filteredCountries[index]),
     );
   }
-  
+
   Widget _buildCountryItem(Country country) {
     // Compare by code to avoid reference equality issues
     final isSelected = _selectedCountry?.code == country.code;
-    
+
     return AppButton.secondary(
       text: country.name,
-      leftIcon: Text(
-        country.flag,
-        style: const TextStyle(fontSize: 18),
-      ),
+      leftIcon: Text(country.flag, style: const TextStyle(fontSize: 18)),
       rightIcon: isSelected
-          ? Icon(
-              Icons.check_circle,
-              color: AppColors.lemon,
-              size: 20,
-            )
+          ? Icon(Icons.check_circle, color: AppColors.gray400, size: 20)
           : null,
       textAlign: TextAlign.left,
       onPressed: () {
@@ -213,7 +199,7 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
       isFullWidth: true,
     );
   }
-  
+
   Widget _buildGradientOverlay(bool keyboardOpen) {
     return Positioned(
       bottom: 0,
@@ -228,7 +214,9 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
               end: Alignment.bottomCenter,
               colors: [
                 Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0),
-                Theme.of(context).scaffoldBackgroundColor.withValues(alpha: 0.7),
+                Theme.of(
+                  context,
+                ).scaffoldBackgroundColor.withValues(alpha: 0.7),
                 Theme.of(context).scaffoldBackgroundColor,
               ],
             ),
@@ -237,7 +225,7 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
       ),
     );
   }
-  
+
   Widget _buildBottomSection(bool keyboardOpen) {
     return Offstage(
       offstage: keyboardOpen,
@@ -259,15 +247,8 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
               text: 'Continue',
               onPressed: _selectedCountry != null
                   ? () {
-                      // TODO: Navigate to next screen
-                      // For now, show selected country
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Selected: ${_selectedCountry!.name} ${_selectedCountry!.flag}',
-                          ),
-                        ),
-                      );
+                      // Navigate to HomePage using GoRouter
+                      context.goToHome();
                     }
                   : null,
               isFullWidth: true,

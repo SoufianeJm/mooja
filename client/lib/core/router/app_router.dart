@@ -4,6 +4,8 @@ import '../../features/intro/intro_page.dart';
 import '../../features/auth/login_page.dart';
 import '../../features/auth/signup_page.dart';
 import '../../features/auth/country_selection_page.dart';
+import '../../features/home/home_page.dart';
+import '../../features/placeholder/placeholder_screen.dart';
 
 // Route path constants - single source of truth
 abstract class AppRoutes {
@@ -12,9 +14,10 @@ abstract class AppRoutes {
   static const login = '/login';
   static const signup = '/signup';
   static const countrySelection = '/country-selection';
+  static const home = '/home';
+  static const placeholder = '/placeholder';
   
   // TODO: Add more routes as you build them
-  // Example: static const home = '/';
   // Example: static const profile = '/profile';
   // Example: static const protestDetails = '/protest/:id';
   
@@ -64,6 +67,18 @@ class AppRouter {
         path: AppRoutes.countrySelection,
         name: 'countrySelection',
         builder: (context, state) => const CountrySelectionPage(),
+      ),
+      
+      GoRoute(
+        path: AppRoutes.home,
+        name: 'home',
+        builder: (context, state) => const HomePage(),
+      ),
+      
+      GoRoute(
+        path: AppRoutes.placeholder,
+        name: 'placeholder',
+        builder: (context, state) => const PlaceholderScreen(),
       ),
       
       // TODO: Add more routes as you build screens
@@ -153,9 +168,10 @@ extension NavigationExtensions on BuildContext {
   void goToIntro() => go(AppRoutes.intro);
   void goToSignup() => go(AppRoutes.signup);
   void goToCountrySelection() => go(AppRoutes.countrySelection);
+  void goToHome() => go(AppRoutes.home);
+  void goToPlaceholder() => go(AppRoutes.placeholder);
   
   // TODO: Add more navigation methods as you create screens
-  // Example: void goHome() => go(AppRoutes.home);
   // Example: void goToProtest(String id) => go('/protest/$id');
   
   // Check current route
@@ -163,6 +179,8 @@ extension NavigationExtensions on BuildContext {
   bool get isIntroPage => GoRouterState.of(this).matchedLocation == AppRoutes.intro;
   bool get isSignupPage => GoRouterState.of(this).matchedLocation == AppRoutes.signup;
   bool get isCountrySelectionPage => GoRouterState.of(this).matchedLocation == AppRoutes.countrySelection;
+  bool get isHomePage => GoRouterState.of(this).matchedLocation == AppRoutes.home;
+  bool get isPlaceholderPage => GoRouterState.of(this).matchedLocation == AppRoutes.placeholder;
   
   // Get route parameters
   String? getParam(String name) => GoRouterState.of(this).pathParameters[name];
