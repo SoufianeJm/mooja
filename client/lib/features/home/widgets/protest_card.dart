@@ -21,7 +21,7 @@ class ProtestCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Colors.black.withValues(alpha: 0.01),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: Colors.black.withValues(alpha: 0.08),
@@ -31,11 +31,7 @@ class ProtestCard extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(context),
-            16.v,
-            _buildContent(context),
-          ],
+          children: [_buildHeader(context), 16.v, _buildContent(context)],
         ),
       ),
     );
@@ -59,8 +55,8 @@ class ProtestCard extends StatelessWidget {
                   ),
                   image: DecorationImage(
                     image: AssetImage(
-                      protest.organizer?.pictureUrl ?? 
-                      'assets/images/avatar1.png',
+                      protest.organizer?.pictureUrl ??
+                          'assets/images/avatar1.png',
                     ),
                     fit: BoxFit.cover,
                   ),
@@ -188,14 +184,11 @@ class ProtestCard extends StatelessWidget {
         ],
       ),
     );
-    
+
     if (isFill) {
-      return SizedBox(
-        width: double.infinity,
-        child: content,
-      );
+      return SizedBox(width: double.infinity, child: content);
     }
-    
+
     // Otherwise return as-is (hug content)
     return content;
   }

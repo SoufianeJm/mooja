@@ -1,4 +1,10 @@
 # Miscellaneous
+*.exe
+railway.json
+render.yaml
+Procfile
+fly.toml
+*.bat
 *.md
 *.class
 *.log

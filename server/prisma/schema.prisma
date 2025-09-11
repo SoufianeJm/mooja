@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Org {
+  id                    String   @id @default(cuid())
+  name                  String?  // Organization's display name
+  username              String   @unique
+  password              String?  // Password (will be required for new registrations)
+  country               String?  // Organization's country
+  socialMediaPlatform   String?  // Twitter, Instagram, Facebook, TikTok
+  socialMediaHandle     String?  // Handle/username on the platform
+  verificationStatus    String   @default("pending") // pending, verified, rejected
+  pictureUrl            String?  // Organization profile picture URL
+  inviteCodeUsed        String?  @unique // The invite code they used to verify (unique for one-to-one relation)
+  verifiedAt            DateTime? // When they were verified
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  protests Protest[]
+  inviteCode InviteCode? @relation(fields: [inviteCodeUsed], references: [code])
+
+  // Performance indexes
+  @@index([verificationStatus])
+  @@index([createdAt])
+  @@index([country])
+  // Critical composite index for admin queries (filter by status, order by createdAt)
+  @@index([verificationStatus, createdAt])
+  @@map("orgs")
+}
+
+model Protest {
+  id          String   @id @default(cuid())
+  title       String
+  dateTime    DateTime
+  country     String?  // Country where the protest is happening (optional for migration)
+  city        String?  // City where the protest is happening (optional for migration)
+  location    String   // Street address or specific location
+  pictureUrl  String?  // Protest event picture URL
+  description String?  // Optional description field for protests
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  organizerId String
+  organizer   Org    @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  // Performance indexes for feed queries
+  @@index([dateTime])
+  @@index([organizerId])
+  @@index([createdAt])
+  @@index([country])  // Index for country filtering
+  // Composite indexes for main feed query
+  @@index([dateTime, createdAt])
+  @@index([country, dateTime])  // For country-filtered future protests
+  @@map("protests")
+}
+
+model InviteCode {
+  id          String    @id @default(cuid())
+  code        String    @unique // The actual invite code (e.g., "MOOJA-XXXX-XXXX")
+  isUsed      Boolean   @default(false)
+  usedBy      Org?      // The org that used this code
+  expiresAt   DateTime  // When the code expires
+  sentTo      String?   // Instagram handle it was sent to
+  sentAt      DateTime? // When it was sent
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Indexes for quick lookup
+  @@index([code])
+  @@index([isUsed])
+  @@index([expiresAt])
+  @@map("invite_codes")
+}

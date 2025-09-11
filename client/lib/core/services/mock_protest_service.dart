@@ -3,7 +3,7 @@ import '../models/protest_model.dart';
 class MockProtestService {
   static List<Protest> getMockProtests() {
     final now = DateTime.now();
-    
+
     return [
       // Today - 2 protests
       Protest(
@@ -18,7 +18,7 @@ class MockProtestService {
           id: 'org1',
           username: 'students_union',
           name: "Student's Union",
-pictureUrl: 'assets/images/avatar1.png',
+          pictureUrl: 'assets/images/avatar1.png',
         ),
         createdAt: now.subtract(const Duration(days: 5)),
         updatedAt: now.subtract(const Duration(days: 5)),
@@ -33,14 +33,14 @@ pictureUrl: 'assets/images/avatar1.png',
         organizerId: 'org2',
         organizer: const Organization(
           id: 'org2',
-username: 'green_morocco',
+          username: 'green_morocco',
           name: 'Green Morocco Initiative',
           pictureUrl: 'assets/images/avatar2.png',
         ),
         createdAt: now.subtract(const Duration(days: 3)),
         updatedAt: now.subtract(const Duration(days: 3)),
       ),
-      
+
       // Tomorrow - 3 protests
       Protest(
         id: '3',
@@ -52,7 +52,7 @@ username: 'green_morocco',
         organizerId: 'org3',
         organizer: const Organization(
           id: 'org3',
-username: 'workers_union',
+          username: 'workers_union',
           name: "Worker's Union For Palestine",
           pictureUrl: 'assets/images/avatar3.png',
         ),
@@ -69,7 +69,7 @@ username: 'workers_union',
         organizerId: 'org4',
         organizer: const Organization(
           id: 'org4',
-username: 'teachers_association',
+          username: 'teachers_association',
           name: 'Teachers Association',
           pictureUrl: 'assets/images/avatar4.png',
         ),
@@ -86,14 +86,14 @@ username: 'teachers_association',
         organizerId: 'org5',
         organizer: const Organization(
           id: 'org5',
-username: 'healthcare_union',
+          username: 'healthcare_union',
           name: 'Healthcare Workers Union',
           pictureUrl: 'assets/images/avatar5.png',
         ),
         createdAt: now.subtract(const Duration(days: 4)),
         updatedAt: now.subtract(const Duration(days: 4)),
       ),
-      
+
       // Day after tomorrow - 1 protest
       Protest(
         id: '6',
@@ -105,14 +105,14 @@ username: 'healthcare_union',
         organizerId: 'org6',
         organizer: const Organization(
           id: 'org6',
-username: 'womens_rights_morocco',
+          username: 'womens_rights_morocco',
           name: 'Women\'s Rights Morocco',
           pictureUrl: 'assets/images/avatar6.png',
         ),
         createdAt: now.subtract(const Duration(days: 6)),
         updatedAt: now.subtract(const Duration(days: 6)),
       ),
-      
+
       // 4 days from now - 1 protest
       Protest(
         id: '7',
@@ -124,7 +124,7 @@ username: 'womens_rights_morocco',
         organizerId: 'org7',
         organizer: const Organization(
           id: 'org7',
-username: 'transparency_morocco',
+          username: 'transparency_morocco',
           name: 'Transparency Morocco',
           pictureUrl: 'assets/images/avatar7.png',
         ),
@@ -133,12 +133,12 @@ username: 'transparency_morocco',
       ),
     ];
   }
-  
+
   /// Groups protests by date and returns them sorted chronologically
   static Map<DateTime, List<Protest>> getGroupedProtests() {
     final protests = getMockProtests();
     final Map<DateTime, List<Protest>> grouped = {};
-    
+
     for (final protest in protests) {
       // Create a date key (without time)
       final dateKey = DateTime(
@@ -146,25 +146,25 @@ username: 'transparency_morocco',
         protest.dateTime.month,
         protest.dateTime.day,
       );
-      
+
       if (!grouped.containsKey(dateKey)) {
         grouped[dateKey] = [];
       }
       grouped[dateKey]!.add(protest);
     }
-    
+
     // Sort each day's protests by time
     grouped.forEach((date, protests) {
       protests.sort((a, b) => a.dateTime.compareTo(b.dateTime));
     });
-    
+
     // Return as sorted map (by date)
     final sortedKeys = grouped.keys.toList()..sort();
     final sortedMap = <DateTime, List<Protest>>{};
     for (final key in sortedKeys) {
       sortedMap[key] = grouped[key]!;
     }
-    
+
     return sortedMap;
   }
 }

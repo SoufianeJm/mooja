@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/intro/intro_page.dart';
 import '../../features/auth/login_page.dart';
@@ -16,11 +17,11 @@ abstract class AppRoutes {
   static const countrySelection = '/country-selection';
   static const home = '/home';
   static const placeholder = '/placeholder';
-  
+
   // TODO: Add more routes as you build them
   // Example: static const profile = '/profile';
   // Example: static const protestDetails = '/protest/:id';
-  
+
   // TODO: Add helper methods for dynamic routes
   // Example: static String protest(String id) => '/protest/$id';
 }
@@ -29,19 +30,18 @@ abstract class AppRoutes {
 class AppRouter {
   // Private constructor to prevent instantiation
   AppRouter._();
-  
+
   // TODO: Connect this to AuthBloc when implemented
   // For now, keeping auth state simple
   // static bool _isAuthenticated = false;
   // static void setAuthState(bool isAuthenticated) {
   //   _isAuthenticated = isAuthenticated;
   // }
-  
+
   // Single router instance (singleton pattern)
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.intro,
-    debugLogDiagnostics: true, // Set to false in production
-    
+    debugLogDiagnostics: kDebugMode, // Only log diagnostics in debug mode
     // Route definitions
     routes: <RouteBase>[
       // Public routes (no auth required)
@@ -50,39 +50,39 @@ class AppRouter {
         name: 'intro',
         builder: (context, state) => const IntroPage(),
       ),
-      
+
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
         builder: (context, state) => const LoginPage(),
       ),
-      
+
       GoRoute(
         path: AppRoutes.signup,
         name: 'signup',
         builder: (context, state) => const SignupPage(),
       ),
-      
+
       GoRoute(
         path: AppRoutes.countrySelection,
         name: 'countrySelection',
         builder: (context, state) => const CountrySelectionPage(),
       ),
-      
+
       GoRoute(
         path: AppRoutes.home,
         name: 'home',
         builder: (context, state) => const HomePage(),
       ),
-      
+
       GoRoute(
         path: AppRoutes.placeholder,
         name: 'placeholder',
         builder: (context, state) => const PlaceholderScreen(),
       ),
-      
+
       // TODO: Add more routes as you build screens
-      
+
       // Example for protected home route with nested routes:
       // GoRoute(
       //   path: '/',
@@ -95,7 +95,7 @@ class AppRouter {
       //     ),
       //   ],
       // ),
-      
+
       // Example for dynamic route with parameters:
       // GoRoute(
       //   path: '/protest/:id',
@@ -105,31 +105,19 @@ class AppRouter {
       //   },
       // ),
     ],
-    
+
     // Global redirect logic for auth
     redirect: (BuildContext context, GoRouterState state) {
-      // TODO: Implement auth redirect when you have authentication
-      // Example of how to define public routes:
-      // const publicRoutes = {
-      //   AppRoutes.intro,
-      //   AppRoutes.login,
-      //   AppRoutes.signup,
-      //   '/forgot-password'
-      // };
+      // Auth wiring pending: intentionally keep redirect null until auth UI/state exists.
+      // When implementing auth, define a small set of public routes and gate others.
+      // Example:
+      // const publicRoutes = { AppRoutes.intro, AppRoutes.login, AppRoutes.signup };
       // final isPublicRoute = publicRoutes.contains(state.matchedLocation);
-      
-      // TODO: When you have a home page, uncomment this auth logic:
-      // if (!_isAuthenticated && !isPublicRoute) {
-      //   return AppRoutes.login;
-      // }
-      // if (_isAuthenticated && state.matchedLocation == AppRoutes.login) {
-      //   return AppRoutes.home;
-      // }
-      
-      // For now, no redirect
+      // if (!context.read<AuthCubit>().state.isAuthenticated && !isPublicRoute) return AppRoutes.login;
+      // if (context.read<AuthCubit>().state.isAuthenticated && state.matchedLocation == AppRoutes.login) return AppRoutes.home;
       return null;
     },
-    
+
     // Error page handler
     errorBuilder: (context, state) {
       return Scaffold(
@@ -170,19 +158,26 @@ extension NavigationExtensions on BuildContext {
   void goToCountrySelection() => go(AppRoutes.countrySelection);
   void goToHome() => go(AppRoutes.home);
   void goToPlaceholder() => go(AppRoutes.placeholder);
-  
+
   // TODO: Add more navigation methods as you create screens
   // Example: void goToProtest(String id) => go('/protest/$id');
-  
+
   // Check current route
-  bool get isLoginPage => GoRouterState.of(this).matchedLocation == AppRoutes.login;
-  bool get isIntroPage => GoRouterState.of(this).matchedLocation == AppRoutes.intro;
-  bool get isSignupPage => GoRouterState.of(this).matchedLocation == AppRoutes.signup;
-  bool get isCountrySelectionPage => GoRouterState.of(this).matchedLocation == AppRoutes.countrySelection;
-  bool get isHomePage => GoRouterState.of(this).matchedLocation == AppRoutes.home;
-  bool get isPlaceholderPage => GoRouterState.of(this).matchedLocation == AppRoutes.placeholder;
-  
+  bool get isLoginPage =>
+      GoRouterState.of(this).matchedLocation == AppRoutes.login;
+  bool get isIntroPage =>
+      GoRouterState.of(this).matchedLocation == AppRoutes.intro;
+  bool get isSignupPage =>
+      GoRouterState.of(this).matchedLocation == AppRoutes.signup;
+  bool get isCountrySelectionPage =>
+      GoRouterState.of(this).matchedLocation == AppRoutes.countrySelection;
+  bool get isHomePage =>
+      GoRouterState.of(this).matchedLocation == AppRoutes.home;
+  bool get isPlaceholderPage =>
+      GoRouterState.of(this).matchedLocation == AppRoutes.placeholder;
+
   // Get route parameters
   String? getParam(String name) => GoRouterState.of(this).pathParameters[name];
-  String? getQueryParam(String name) => GoRouterState.of(this).uri.queryParameters[name];
+  String? getQueryParam(String name) =>
+      GoRouterState.of(this).uri.queryParameters[name];
 }
