@@ -8,6 +8,7 @@ import '../../features/auth/login_page.dart';
 import '../../features/auth/signup_page.dart';
 import '../../features/auth/country_selection_page.dart';
 import '../../features/auth/organization_name_page.dart';
+import '../../features/auth/social_media_selection_page.dart';
 import '../../features/home/widgets/feed_shell.dart';
 import '../../features/home/protestor_feed_page.dart';
 import '../../features/home/organization_feed_page.dart';
@@ -22,6 +23,7 @@ abstract class AppRoutes {
   static const signup = '/signup';
   static const countrySelection = '/country-selection';
   static const organizationName = '/organization-name';
+  static const socialMediaSelection = '/social-media-selection';
   static const home = '/home';
   static const protestorFeed = '/home/protestor';
   static const organizationFeed = '/home/organization';
@@ -80,6 +82,12 @@ class AppRouter {
         path: AppRoutes.organizationName,
         name: 'organizationName',
         builder: (context, state) => const OrganizationNamePage(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.socialMediaSelection,
+        name: 'socialMediaSelection',
+        builder: (context, state) => const SocialMediaSelectionPage(),
       ),
 
       // Keeps tab state when switching between tabs
@@ -209,6 +217,7 @@ extension NavigationExtensions on BuildContext {
   void goToSignup() => go(AppRoutes.signup);
   void goToCountrySelection() => go(AppRoutes.countrySelection);
   void goToOrganizationName() => go(AppRoutes.organizationName);
+  void goToSocialMediaSelection() => go(AppRoutes.socialMediaSelection);
   void goToHome() => go(AppRoutes.protestorFeed);
   void goToProtestorFeed() => go(AppRoutes.protestorFeed);
   void goToOrganizationFeed() => go(AppRoutes.organizationFeed);
