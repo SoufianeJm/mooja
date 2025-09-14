@@ -187,6 +187,28 @@ export class OrgsService {
     });
   }
 
+  async findByCountry(country: string) {
+    return this.prisma.org.findMany({
+      where: { 
+        country: {
+          equals: country,
+          mode: 'insensitive'
+        }
+      },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        country: true,
+        socialMediaPlatform: true,
+        socialMediaHandle: true,
+        verificationStatus: true,
+        pictureUrl: true,
+        createdAt: true,
+      },
+    });
+  }
+
   /**
    * Check username availability with timing normalization
    * This helps prevent timing-based username enumeration

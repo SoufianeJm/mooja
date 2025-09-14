@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import '../di/service_locator.dart';
+import '../services/auth_service.dart';
 import '../../features/intro/intro_page.dart';
 import '../../features/auth/login_page.dart';
 import '../../features/auth/signup_page.dart';
 import '../../features/auth/country_selection_page.dart';
+import '../../features/auth/organization_name_page.dart';
 import '../../features/home/widgets/feed_shell.dart';
 import '../../features/home/protestor_feed_page.dart';
 import '../../features/home/organization_feed_page.dart';
@@ -18,6 +21,7 @@ abstract class AppRoutes {
   static const login = '/login';
   static const signup = '/signup';
   static const countrySelection = '/country-selection';
+  static const organizationName = '/organization-name';
   static const home = '/home';
   static const protestorFeed = '/home/protestor';
   static const organizationFeed = '/home/organization';
@@ -70,6 +74,12 @@ class AppRouter {
         path: AppRoutes.countrySelection,
         name: 'countrySelection',
         builder: (context, state) => const CountrySelectionPage(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.organizationName,
+        name: 'organizationName',
+        builder: (context, state) => const OrganizationNamePage(),
       ),
 
       // Keeps tab state when switching between tabs
@@ -139,8 +149,25 @@ class AppRouter {
       // ),
     ],
 
-    redirect: (BuildContext context, GoRouterState state) {
-      // Auth redirect will be implemented when auth is ready
+    redirect: (BuildContext context, GoRouterState state) async {
+      // Check if user is already logged in
+      final authService = sl<AuthService>();
+      final isLoggedIn = await authService.isLoggedIn();
+
+      // If user is logged in and trying to access intro/login, redirect to home
+      if (isLoggedIn &&
+          (state.matchedLocation == AppRoutes.intro ||
+              state.matchedLocation == AppRoutes.login)) {
+        return AppRoutes.organizationFeed;
+      }
+
+      // If user is not logged in and trying to access protected routes, redirect to intro
+      if (!isLoggedIn &&
+          (state.matchedLocation == AppRoutes.organizationFeed ||
+              state.matchedLocation == AppRoutes.protestorFeed)) {
+        return AppRoutes.intro;
+      }
+
       return null;
     },
 
@@ -181,6 +208,7 @@ extension NavigationExtensions on BuildContext {
   void goToIntro() => go(AppRoutes.intro);
   void goToSignup() => go(AppRoutes.signup);
   void goToCountrySelection() => go(AppRoutes.countrySelection);
+  void goToOrganizationName() => go(AppRoutes.organizationName);
   void goToHome() => go(AppRoutes.protestorFeed);
   void goToProtestorFeed() => go(AppRoutes.protestorFeed);
   void goToOrganizationFeed() => go(AppRoutes.organizationFeed);

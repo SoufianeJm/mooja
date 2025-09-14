@@ -18,6 +18,9 @@ fly.toml
 .svn/
 .swiftpm/
 migrate_working_dir/
+/journeys
+.cursor
+/server/*
 
 # IntelliJ related
 *.iml

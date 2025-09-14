@@ -31,7 +31,7 @@ async function main() {
       name: 'Test Organization',
       username: 'test_org',
       password: hashedPassword,
-      country: 'United States',
+      country: 'US',
       socialMediaPlatform: 'Instagram',
       socialMediaHandle: '@test_org',
       verificationStatus: 'verified',
@@ -49,7 +49,7 @@ async function main() {
       name: 'Climate Warriors',
       username: 'climate_warriors',
       password: await bcrypt.hash('climatepass123', BCRYPT_ROUNDS),
-      country: 'United Kingdom',
+      country: 'GB',
       socialMediaPlatform: 'Instagram',
       socialMediaHandle: '@climate.warriors.uk',
       verificationStatus: 'pending',
@@ -68,7 +68,7 @@ async function main() {
     {
       title: 'March For Gaza',
       dateTime: new Date(currentDate.getTime() + 2 * 60 * 60 * 1000), // 2 hours from now
-      country: 'Morocco',
+      country: 'MA',
       city: 'Casablanca',
       location: 'United Nations Square, Casablanca',
       description: 'Stand in solidarity with Palestine',
@@ -77,7 +77,7 @@ async function main() {
     {
       title: 'Climate Action Now',
       dateTime: new Date(currentDate.getTime() + ONE_DAY_MS), // Tomorrow
-      country: 'Morocco',
+      country: 'MA',
       city: 'Rabat',
       location: 'Parliament Building, Rabat',
       description: 'Urgent action needed for climate change',
@@ -86,7 +86,7 @@ async function main() {
     {
       title: 'United For Palestine',
       dateTime: new Date(currentDate.getTime() + THREE_DAYS_MS), // 3 days from now
-      country: 'Morocco',
+      country: 'MA',
       city: 'Casablanca',
       location: 'Bab Al Had Square',
       description: 'Peaceful demonstration for Palestinian rights',
@@ -95,7 +95,7 @@ async function main() {
     {
       title: 'Education Reform Rally',
       dateTime: new Date(currentDate.getTime() + ONE_WEEK_MS), // 1 week from now
-      country: 'Morocco',
+      country: 'MA',
       city: 'Fes',
       location: 'University Campus, Fes',
       description: 'Demanding better education policies',
@@ -104,7 +104,7 @@ async function main() {
     {
       title: 'Healthcare Workers March',
       dateTime: new Date(currentDate.getTime() + TWO_WEEKS_MS), // 2 weeks from now
-      country: 'Morocco',
+      country: 'MA',
       city: 'Casablanca',
       location: 'Ibn Rochd Hospital',
       description: 'Supporting healthcare worker rights',
@@ -113,7 +113,7 @@ async function main() {
     {
       title: 'Women\'s Rights Assembly',
       dateTime: new Date(currentDate.getTime() + ONE_MONTH_MS), // 1 month from now
-      country: 'Morocco',
+      country: 'MA',
       city: 'Marrakech',
       location: 'Jemaa el-Fnaa Square',
       description: 'Equal rights for all women',

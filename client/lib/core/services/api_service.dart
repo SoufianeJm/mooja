@@ -8,6 +8,7 @@ class ApiService {
   static String get baseUrl => _baseUrl;
 
   late final Dio _dio;
+  Dio get dio => _dio;
 
   ApiService() {
     _dio = Dio(

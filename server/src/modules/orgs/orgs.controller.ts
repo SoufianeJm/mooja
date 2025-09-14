@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Patch, Request, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Patch, Request, UseGuards, Get, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { OrgsService } from './orgs.service';
 import { VerifyOrgDto } from './dto/verify-org.dto';
@@ -39,5 +39,16 @@ export class OrgsController {
   @ApiResponse({ status: 409, description: 'Organization username already exists' })
   async requestVerification(@Body() verifyOrgDto: VerifyOrgDto) {
     return this.orgsService.requestVerification(verifyOrgDto);
+  }
+
+  @Public()
+  @Get()
+  @ApiOperation({ summary: 'Get organizations by country' })
+  @ApiResponse({ status: 200, description: 'Organizations retrieved successfully' })
+  async getOrganizations(@Query('country') country?: string) {
+    if (!country) {
+      return []; // Return empty array if no country specified
+    }
+    return this.orgsService.findByCountry(country);
   }
 }

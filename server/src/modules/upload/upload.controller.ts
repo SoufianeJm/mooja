@@ -71,7 +71,7 @@ export class UploadController {
       },
     })
   )
-  uploadImage(
+  async uploadImage(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
@@ -82,21 +82,28 @@ export class UploadController {
       }),
     ) file: UploadedFileInterface,
     @Req() req: RequestWithContext,
-  ): UploadResponse {
+  ): Promise<UploadResponse> {
     // File validation is now handled by ParseFilePipe validators
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
-    // Generate the URL for the uploaded file
-    const fileUrl = this.uploadService.generateFileUrl(file.filename, req);
+    try {
+      // Upload to Supabase Storage
+      const fileUrl = await this.uploadService.uploadToSupabase(file);
+      
+      // Extract filename from URL for response
+      const fileName = fileUrl.split('/').pop() || file.filename;
 
-    return {
-      message: 'Image uploaded successfully',
-      filename: file.filename,
-      url: fileUrl,
-      size: file.size,
-      mimetype: file.mimetype,
-    };
+      return {
+        message: 'Image uploaded successfully to Supabase Storage',
+        filename: fileName,
+        url: fileUrl,
+        size: file.size,
+        mimetype: file.mimetype,
+      };
+    } catch (error: any) {
+      throw new BadRequestException(`Upload failed: ${error.message}`);
+    }
   }
 }
