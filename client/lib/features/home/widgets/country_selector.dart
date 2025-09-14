@@ -5,13 +5,9 @@ import '../../../core/constants/countries.dart';
 
 class CountrySelector extends StatelessWidget {
   final Country? selectedCountry;
-  final ValueChanged<Country?>? onCountryChanged;
+  final VoidCallback? onTap;
 
-  const CountrySelector({
-    super.key,
-    this.selectedCountry,
-    this.onCountryChanged,
-  });
+  const CountrySelector({super.key, this.selectedCountry, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -23,17 +19,12 @@ class CountrySelector extends StatelessWidget {
         );
 
     return GestureDetector(
-      onTap: () {
-        if (onCountryChanged != null) {
-          // For now, just cycle through a few countries for demo
-          // In a real app, this would open a country selection modal
-          final currentIndex = kCountries.indexOf(country);
-          final nextIndex = (currentIndex + 1) % kCountries.length;
-          onCountryChanged!(kCountries[nextIndex]);
-        } else {
-          context.goToCountrySelection();
-        }
-      },
+      onTap:
+          onTap ??
+          () {
+            // Default behavior: navigate to country selection screen
+            context.goToCountrySelection();
+          },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
         decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),

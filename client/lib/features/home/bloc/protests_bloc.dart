@@ -23,30 +23,48 @@ class ProtestsBloc extends Bloc<ProtestsEvent, ProtestsState> {
     Emitter<ProtestsState> emit,
   ) async {
     try {
-      // If not refreshing, show loading state
-      if (!event.refresh) {
+      // Check if BLoC is still active before emitting
+      if (!isClosed) {
         emit(const ProtestsLoading());
       }
 
       final result = await _apiService.getProtests(
         country: event.country,
-        limit: 20, // Load 20 protests at a time
+        limit: 20,
       );
 
       // Group protests by date
       final groupedProtests = _groupProtestsByDate(result.data);
 
-      emit(
-        ProtestsLoaded(
-          protests: result.data,
-          groupedProtests: groupedProtests,
-          nextCursor: result.nextCursor,
-          hasNextPage: result.hasNextPage,
-          selectedCountry: event.country,
-        ),
-      );
+      // Check again after async operation
+      if (!isClosed) {
+        emit(
+          ProtestsLoaded(
+            protests: result.data,
+            groupedProtests: groupedProtests,
+            nextCursor: result.nextCursor,
+            hasNextPage: result.hasNextPage,
+            selectedCountry: event.country,
+          ),
+        );
+      }
     } catch (e) {
-      emit(ProtestsError(e.toString()));
+      // Fallback to global feed on invalid country
+      if (e is ApiError && event.country != null) {
+        final status = e.statusCode ?? 0;
+        if (status == 400 || status == 404 || status == 422) {
+          // Try loading without country filter
+          if (!isClosed) {
+            add(const LoadProtests(refresh: true));
+          }
+          return;
+        }
+      }
+
+      // Check before emitting error state
+      if (!isClosed) {
+        emit(ProtestsError(e.toString()));
+      }
     }
   }
 
@@ -56,19 +74,17 @@ class ProtestsBloc extends Bloc<ProtestsEvent, ProtestsState> {
     Emitter<ProtestsState> emit,
   ) async {
     final currentState = state;
-    if (currentState is! ProtestsLoaded ||
-        currentState.isLoadingMore ||
-        !currentState.hasNextPage) {
-      return;
-    }
+    if (currentState is! ProtestsLoaded || currentState.isLoadingMore) return;
 
     try {
-      // Set loading more state
-      emit(currentState.copyWith(isLoadingMore: true));
+      // Check before emitting loading state
+      if (!isClosed) {
+        emit(currentState.copyWith(isLoadingMore: true));
+      }
 
       final result = await _apiService.getProtests(
-        cursor: currentState.nextCursor,
         country: currentState.selectedCountry,
+        cursor: currentState.nextCursor,
         limit: 20,
       );
 
@@ -76,19 +92,24 @@ class ProtestsBloc extends Bloc<ProtestsEvent, ProtestsState> {
       final allProtests = [...currentState.protests, ...result.data];
       final groupedProtests = _groupProtestsByDate(allProtests);
 
-      emit(
-        ProtestsLoaded(
-          protests: allProtests,
-          groupedProtests: groupedProtests,
-          nextCursor: result.nextCursor,
-          hasNextPage: result.hasNextPage,
-          selectedCountry: currentState.selectedCountry,
-        ),
-      );
+      // Check again after async operation
+      if (!isClosed) {
+        emit(
+          currentState.copyWith(
+            protests: allProtests,
+            groupedProtests: groupedProtests,
+            nextCursor: result.nextCursor,
+            hasNextPage: result.hasNextPage,
+            isLoadingMore: false,
+          ),
+        );
+      }
     } catch (e) {
-      // Revert loading state on error
-      emit(currentState.copyWith(isLoadingMore: false));
-      emit(ProtestsError(e.toString()));
+      // Check before emitting error states
+      if (!isClosed) {
+        emit(currentState.copyWith(isLoadingMore: false));
+        emit(ProtestsError(e.toString()));
+      }
     }
   }
 
@@ -97,52 +118,40 @@ class ProtestsBloc extends Bloc<ProtestsEvent, ProtestsState> {
     FilterByCountry event,
     Emitter<ProtestsState> emit,
   ) async {
-    // If country is the same, do nothing
-    final currentState = state;
-    if (currentState is ProtestsLoaded &&
-        currentState.selectedCountry == event.country) {
-      return;
-    }
-
     // Load protests with new country filter
     add(LoadProtests(country: event.country));
   }
 
   /// Clear all protests
   void _onClearProtests(ClearProtests event, Emitter<ProtestsState> emit) {
-    emit(const ProtestsInitial());
+    if (!isClosed) {
+      emit(const ProtestsInitial());
+    }
   }
 
-  /// Group protests by date for UI display
+  /// Group protests by date for display
   Map<DateTime, List<Protest>> _groupProtestsByDate(List<Protest> protests) {
     final Map<DateTime, List<Protest>> grouped = {};
 
     for (final protest in protests) {
-      // Create a date key (without time)
-      final dateKey = DateTime(
+      // Group by date (ignoring time)
+      final date = DateTime(
         protest.dateTime.year,
         protest.dateTime.month,
         protest.dateTime.day,
       );
 
-      if (!grouped.containsKey(dateKey)) {
-        grouped[dateKey] = [];
+      if (grouped[date] == null) {
+        grouped[date] = [];
       }
-      grouped[dateKey]!.add(protest);
+      grouped[date]!.add(protest);
     }
 
-    // Sort each day's protests by time
-    grouped.forEach((date, protests) {
-      protests.sort((a, b) => a.dateTime.compareTo(b.dateTime));
-    });
-
-    // Return as sorted map (by date)
-    final sortedKeys = grouped.keys.toList()..sort();
-    final sortedMap = <DateTime, List<Protest>>{};
-    for (final key in sortedKeys) {
-      sortedMap[key] = grouped[key]!;
+    // Sort protests within each date group by time
+    for (final date in grouped.keys) {
+      grouped[date]!.sort((a, b) => a.dateTime.compareTo(b.dateTime));
     }
 
-    return sortedMap;
+    return grouped;
   }
 }

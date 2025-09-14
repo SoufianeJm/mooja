@@ -5,8 +5,11 @@ import '../../features/intro/intro_page.dart';
 import '../../features/auth/login_page.dart';
 import '../../features/auth/signup_page.dart';
 import '../../features/auth/country_selection_page.dart';
-import '../../features/home/home_page.dart';
+import '../../features/home/widgets/feed_shell.dart';
+import '../../features/home/protestor_feed_page.dart';
+import '../../features/home/organization_feed_page.dart';
 import '../../features/placeholder/placeholder_screen.dart';
+import '../../features/home/widgets/tab_navigation.dart';
 
 // Route path constants - single source of truth
 abstract class AppRoutes {
@@ -16,6 +19,8 @@ abstract class AppRoutes {
   static const signup = '/signup';
   static const countrySelection = '/country-selection';
   static const home = '/home';
+  static const protestorFeed = '/home/protestor';
+  static const organizationFeed = '/home/organization';
   static const placeholder = '/placeholder';
 
   // TODO: Add more routes as you build them
@@ -38,11 +43,9 @@ class AppRouter {
   //   _isAuthenticated = isAuthenticated;
   // }
 
-  // Single router instance (singleton pattern)
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.intro,
     debugLogDiagnostics: kDebugMode, // Only log diagnostics in debug mode
-    // Route definitions
     routes: <RouteBase>[
       // Public routes (no auth required)
       GoRoute(
@@ -69,10 +72,40 @@ class AppRouter {
         builder: (context, state) => const CountrySelectionPage(),
       ),
 
-      GoRoute(
-        path: AppRoutes.home,
-        name: 'home',
-        builder: (context, state) => const HomePage(),
+      // Keeps tab state when switching between tabs
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return FeedShell(
+            activeTab: navigationShell.currentIndex == 0
+                ? TabType.forYou
+                : TabType.forOrganizations,
+            onTabChanged: (newTab) {
+              final newIndex = newTab == TabType.forYou ? 0 : 1;
+              navigationShell.goBranch(newIndex);
+            },
+            child: navigationShell,
+          );
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.protestorFeed,
+                name: 'protestorFeed',
+                builder: (context, state) => const ProtestorFeedPage(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.organizationFeed,
+                name: 'organizationFeed',
+                builder: (context, state) => const OrganizationFeedPage(),
+              ),
+            ],
+          ),
+        ],
       ),
 
       GoRoute(
@@ -106,15 +139,8 @@ class AppRouter {
       // ),
     ],
 
-    // Global redirect logic for auth
     redirect: (BuildContext context, GoRouterState state) {
-      // Auth wiring pending: intentionally keep redirect null until auth UI/state exists.
-      // When implementing auth, define a small set of public routes and gate others.
-      // Example:
-      // const publicRoutes = { AppRoutes.intro, AppRoutes.login, AppRoutes.signup };
-      // final isPublicRoute = publicRoutes.contains(state.matchedLocation);
-      // if (!context.read<AuthCubit>().state.isAuthenticated && !isPublicRoute) return AppRoutes.login;
-      // if (context.read<AuthCubit>().state.isAuthenticated && state.matchedLocation == AppRoutes.login) return AppRoutes.home;
+      // Auth redirect will be implemented when auth is ready
       return null;
     },
 
@@ -149,14 +175,15 @@ class AppRouter {
   );
 }
 
-// Navigation extensions for type safety and convenience
 extension NavigationExtensions on BuildContext {
   // Current navigation methods
   void goToLogin() => go(AppRoutes.login);
   void goToIntro() => go(AppRoutes.intro);
   void goToSignup() => go(AppRoutes.signup);
   void goToCountrySelection() => go(AppRoutes.countrySelection);
-  void goToHome() => go(AppRoutes.home);
+  void goToHome() => go(AppRoutes.protestorFeed);
+  void goToProtestorFeed() => go(AppRoutes.protestorFeed);
+  void goToOrganizationFeed() => go(AppRoutes.organizationFeed);
   void goToPlaceholder() => go(AppRoutes.placeholder);
 
   // TODO: Add more navigation methods as you create screens
@@ -172,7 +199,7 @@ extension NavigationExtensions on BuildContext {
   bool get isCountrySelectionPage =>
       GoRouterState.of(this).matchedLocation == AppRoutes.countrySelection;
   bool get isHomePage =>
-      GoRouterState.of(this).matchedLocation == AppRoutes.home;
+      GoRouterState.of(this).matchedLocation == AppRoutes.protestorFeed;
   bool get isPlaceholderPage =>
       GoRouterState.of(this).matchedLocation == AppRoutes.placeholder;
 

@@ -45,4 +45,42 @@ class StorageService {
     final token = await readAuthToken();
     return token != null && token.isNotEmpty;
   }
+
+  // ========== App Preferences ==========
+  static const String _keySelectedCountry = 'selected_country_code';
+  static const String _keyUserType = 'user_type'; // protestor | org
+  static const String _keyIsFirstTime = 'is_first_time'; // 'true' | 'false'
+
+  // Selected country
+  Future<void> saveSelectedCountryCode(String countryCode) async {
+    await _storage.write(key: _keySelectedCountry, value: countryCode);
+  }
+
+  Future<String?> readSelectedCountryCode() async {
+    return await _storage.read(key: _keySelectedCountry);
+  }
+
+  Future<void> deleteSelectedCountryCode() async {
+    await _storage.delete(key: _keySelectedCountry);
+  }
+
+  // User type
+  Future<void> saveUserType(String userType) async {
+    await _storage.write(key: _keyUserType, value: userType);
+  }
+
+  Future<String?> readUserType() async {
+    return await _storage.read(key: _keyUserType);
+  }
+
+  // First-time flag (defaults to true when not set)
+  Future<void> saveIsFirstTime(bool isFirstTime) async {
+    await _storage.write(key: _keyIsFirstTime, value: isFirstTime.toString());
+  }
+
+  Future<bool> readIsFirstTime() async {
+    final value = await _storage.read(key: _keyIsFirstTime);
+    if (value == null) return true;
+    return value.toLowerCase() == 'true';
+  }
 }

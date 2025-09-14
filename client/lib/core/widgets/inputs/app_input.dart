@@ -49,6 +49,15 @@ class _AppInputState extends State<AppInput>
   late AnimationController _animationController;
   late Animation<double> _shadowAnimation;
 
+  /// Focus change handler - stored as a named function for proper removal
+  void _onFocusChange() {
+    if (_focusNode.hasFocus) {
+      _animationController.forward(); // Show yellow glow
+    } else {
+      _animationController.reverse();
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -63,13 +72,8 @@ class _AppInputState extends State<AppInput>
       curve: Curves.easeInOut,
     );
 
-    _focusNode.addListener(() {
-      if (_focusNode.hasFocus) {
-        _animationController.forward();
-      } else {
-        _animationController.reverse();
-      }
-    });
+    // Use named function for proper cleanup
+    _focusNode.addListener(_onFocusChange);
 
     if (widget.controller != null) {
       _controller = widget.controller;
@@ -81,6 +85,8 @@ class _AppInputState extends State<AppInput>
 
   @override
   void dispose() {
+    // Remove listener before disposing to prevent memory leak
+    _focusNode.removeListener(_onFocusChange);
     _animationController.dispose();
     _focusNode.dispose();
     if (widget.controller == null) {

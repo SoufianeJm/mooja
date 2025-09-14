@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/themes/theme_exports.dart';
 import '../../../core/models/protest_model.dart';
+import '../../../core/services/api_service.dart';
 
 class ProtestCard extends StatelessWidget {
   final Protest protest;
@@ -13,6 +14,31 @@ class ProtestCard extends StatelessWidget {
     this.onTap,
     this.onMoreTap,
   });
+
+  ImageProvider _getImageProvider(String? pictureUrl) {
+    if (pictureUrl == null || pictureUrl.isEmpty) {
+      return const AssetImage('assets/images/avatar1.png');
+    }
+
+    // Check if it's a network URL (full URL) - includes Supabase Storage URLs
+    if (pictureUrl.startsWith('http://') || pictureUrl.startsWith('https://')) {
+      return NetworkImage(pictureUrl);
+    }
+
+    // Check if it's a server upload path (relative URL)
+    if (pictureUrl.startsWith('/uploads/')) {
+      final baseUrl = ApiService.baseUrl.replaceAll('/api', ''); // Remove /api suffix
+      return NetworkImage('$baseUrl$pictureUrl');
+    }
+
+    // Check if it's a local asset path
+    if (pictureUrl.startsWith('assets/')) {
+      return AssetImage(pictureUrl);
+    }
+
+    // Default fallback
+    return const AssetImage('assets/images/avatar1.png');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,12 +79,17 @@ class ProtestCard extends StatelessWidget {
                     color: AppColors.gray400.withValues(alpha: 0.3),
                     width: 1,
                   ),
-                  image: DecorationImage(
-                    image: AssetImage(
-                      protest.organizer?.pictureUrl ??
-                          'assets/images/avatar1.png',
-                    ),
+                ),
+                child: ClipOval(
+                  child: Image(
+                    image: _getImageProvider(protest.organizer?.pictureUrl),
                     fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        'assets/images/avatar1.png',
+                        fit: BoxFit.cover,
+                      );
+                    },
                   ),
                 ),
               ),
