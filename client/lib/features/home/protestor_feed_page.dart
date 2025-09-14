@@ -28,7 +28,7 @@ class _ProtestorFeedPageState extends State<ProtestorFeedPage> {
   bool _isInitialized = false;
   final Map<String, bool> _orgsCache = {};
   late final ProtestsBloc _protestsBloc;
-  
+
   // Cache Future to prevent recreation on rebuilds
   Future<bool>? _orgCheckFuture;
   String? _lastCheckedCountry;
@@ -215,9 +215,11 @@ class _ProtestorFeedPageState extends State<ProtestorFeedPage> {
             // Only create new Future when country actually changes
             if (_lastCheckedCountry != state.selectedCountry) {
               _lastCheckedCountry = state.selectedCountry;
-              _orgCheckFuture = _hasOrganizationsInCountry(state.selectedCountry);
+              _orgCheckFuture = _hasOrganizationsInCountry(
+                state.selectedCountry,
+              );
             }
-            
+
             return FutureBuilder<bool>(
               future: _orgCheckFuture,
               builder: (context, snapshot) {
@@ -323,7 +325,9 @@ class _ProtestorFeedPageState extends State<ProtestorFeedPage> {
                                   // TODO(protestor, 2024-12-14): Navigate to protest details when implemented
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content: Text('Tapped: ${protests[i].title}'),
+                                      content: Text(
+                                        'Tapped: ${protests[i].title}',
+                                      ),
                                     ),
                                   );
                                 },
