@@ -4,6 +4,7 @@ import '../services/storage_service.dart';
 import '../services/auth_service.dart';
 import '../../features/home/bloc/protests_bloc.dart';
 import '../../features/auth/bloc/auth_bloc.dart';
+import '../../features/auth/verification_cubit.dart';
 
 /// Global service locator instance
 final GetIt sl = GetIt.instance;
@@ -15,6 +16,9 @@ Future<void> setupServiceLocator() async {
   sl.registerLazySingleton<StorageService>(() => StorageService());
   sl.registerLazySingleton<ApiService>(() => ApiService());
   sl.registerLazySingleton<AuthService>(() => AuthService(sl<ApiService>()));
+  sl.registerLazySingleton<VerificationCubit>(
+    () => VerificationCubit(sl<ApiService>(), sl<StorageService>()),
+  );
 
   // Register BLoCs as factories (stateless, created per use)
   sl.registerFactory<ProtestsBloc>(

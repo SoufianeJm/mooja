@@ -50,6 +50,8 @@ class StorageService {
   static const String _keySelectedCountry = 'selected_country_code';
   static const String _keyUserType = 'user_type'; // protestor | org
   static const String _keyIsFirstTime = 'is_first_time'; // 'true' | 'false'
+  static const String _keyPendingOrgName = 'pending_org_name';
+  static const String _keyPendingSocialPlatform = 'pending_social_platform';
 
   // Selected country
   Future<void> saveSelectedCountryCode(String countryCode) async {
@@ -82,5 +84,30 @@ class StorageService {
     final value = await _storage.read(key: _keyIsFirstTime);
     if (value == null) return true;
     return value.toLowerCase() == 'true';
+  }
+
+  // Pending organization verification data
+  Future<void> savePendingOrgName(String name) async {
+    await _storage.write(key: _keyPendingOrgName, value: name);
+  }
+
+  Future<String?> readPendingOrgName() async {
+    return await _storage.read(key: _keyPendingOrgName);
+  }
+
+  Future<void> deletePendingOrgName() async {
+    await _storage.delete(key: _keyPendingOrgName);
+  }
+
+  Future<void> savePendingSocialPlatform(String platform) async {
+    await _storage.write(key: _keyPendingSocialPlatform, value: platform);
+  }
+
+  Future<String?> readPendingSocialPlatform() async {
+    return await _storage.read(key: _keyPendingSocialPlatform);
+  }
+
+  Future<void> deletePendingSocialPlatform() async {
+    await _storage.delete(key: _keyPendingSocialPlatform);
   }
 }

@@ -1,10 +1,24 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:io' show Platform;
 import '../models/protest_model.dart';
 
 class ApiService {
-  static String get _baseUrl =>
-      dotenv.env['API_BASE_URL'] ?? 'http://localhost:3000/api';
+  static String get _baseUrl {
+    final envUrl = dotenv.env['API_BASE_URL'];
+    if (envUrl != null && envUrl.isNotEmpty) return envUrl;
+
+    // Default per-platform sensible base URL
+    bool isAndroid = false;
+    try {
+      isAndroid = Platform.isAndroid;
+    } catch (_) {
+      // Platform not available (e.g., web); fall through to localhost
+    }
+    if (isAndroid) return 'http://10.0.2.2:3000/api';
+    return 'http://localhost:3000/api';
+  }
+
   static String get baseUrl => _baseUrl;
 
   late final Dio _dio;
@@ -69,6 +83,59 @@ class ApiService {
       return (response.data as List)
           .map((item) => Organization.fromJson(item))
           .toList();
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Request organization verification
+  Future<Map<String, dynamic>> requestOrgVerification({
+    required String name,
+    required String country,
+    String? socialMediaPlatform,
+    String? socialMediaHandle,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/orgs/verify',
+        data: {
+          'name': name,
+          'country': country,
+          if (socialMediaPlatform != null)
+            'socialMediaPlatform': socialMediaPlatform,
+          if (socialMediaHandle != null) 'socialMediaHandle': socialMediaHandle,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Verify organization with invite code (moves status to "verified")
+  Future<Map<String, dynamic>> verifyOrgWithCode({
+    required String inviteCode,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/orgs/verify-with-code',
+        data: {'inviteCode': inviteCode},
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get verification status by username
+  Future<String> getOrgStatusByUsername(String username) async {
+    try {
+      final response = await _dio.get(
+        '/orgs/status',
+        queryParameters: {'username': username},
+      );
+      final data = response.data as Map<String, dynamic>;
+      return (data['verificationStatus'] as String?) ?? 'pending';
     } on DioException catch (e) {
       throw _handleError(e);
     }

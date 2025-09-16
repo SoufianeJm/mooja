@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import '../../core/themes/theme_exports.dart';
 import '../../core/widgets/buttons/app_button.dart';
 import '../../core/widgets/inputs/app_input.dart';
+import '../../core/widgets/app_chip.dart';
 import '../../core/router/app_router.dart';
+import '../../core/di/service_locator.dart';
+import '../../core/services/storage_service.dart';
+import 'verification_cubit.dart';
 
 class OrganizationNamePage extends StatefulWidget {
   const OrganizationNamePage({super.key});
@@ -47,8 +51,14 @@ class _OrganizationNamePageState extends State<OrganizationNamePage> {
       _isLoading = true;
     });
 
-    // Navigate to social media selection screen
-    context.goToSocialMediaSelection();
+    // Persist org name and navigate
+    final storage = sl<StorageService>();
+    storage.savePendingOrgName(organizationName).whenComplete(() async {
+      await sl<VerificationCubit>().setOrgName(organizationName);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      context.goToSocialMediaSelection();
+    });
   }
 
   @override
@@ -67,22 +77,9 @@ class _OrganizationNamePageState extends State<OrganizationNamePage> {
               Center(
                 child: Transform.rotate(
                   angle: -0.1745, // -10 degrees in radians
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.lemon,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      'step 02',
-                      style: AppTypography.bodySubMedium.copyWith(
-                        color: AppColors.lemon900,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                  child: AppChip(
+                    label: 'step 02',
+                    backgroundColor: AppColors.lemon,
                   ),
                 ),
               ),

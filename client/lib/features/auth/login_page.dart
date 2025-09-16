@@ -125,8 +125,9 @@ class _LoginPageState extends State<LoginPage> {
                             text: "Don't have an account? Get Verified",
                             onPressed: isLoading
                                 ? null
-                                : () {
-                                    context.goToOrganizationName();
+                                : () async {
+                                    // Start org flow at status lookup (full step before country selection)
+                                    context.goToStatusLookup();
                                   },
                             isFullWidth: true,
                           ),

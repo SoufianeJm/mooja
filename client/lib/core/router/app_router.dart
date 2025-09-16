@@ -9,6 +9,9 @@ import '../../features/auth/signup_page.dart';
 import '../../features/auth/country_selection_page.dart';
 import '../../features/auth/organization_name_page.dart';
 import '../../features/auth/social_media_selection_page.dart';
+import '../../features/auth/social_username_page.dart';
+import '../../features/auth/verification_timeline_page.dart';
+import '../../features/auth/status_lookup_page.dart';
 import '../../features/home/widgets/feed_shell.dart';
 import '../../features/home/protestor_feed_page.dart';
 import '../../features/home/organization_feed_page.dart';
@@ -24,6 +27,9 @@ abstract class AppRoutes {
   static const countrySelection = '/country-selection';
   static const organizationName = '/organization-name';
   static const socialMediaSelection = '/social-media-selection';
+  static const socialUsername = '/social-username';
+  static const verificationTimeline = '/verification-timeline';
+  static const statusLookup = '/status-lookup';
   static const home = '/home';
   static const protestorFeed = '/home/protestor';
   static const organizationFeed = '/home/organization';
@@ -75,7 +81,14 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.countrySelection,
         name: 'countrySelection',
-        builder: (context, state) => const CountrySelectionPage(),
+        builder: (context, state) {
+          final isOrgFlow = state.uri.queryParameters['orgFlow'] == '1';
+          final stepLabel = state.uri.queryParameters['stepLabel'];
+          return CountrySelectionPage(
+            forOrganizationFlow: isOrgFlow,
+            stepLabel: stepLabel,
+          );
+        },
       ),
 
       GoRoute(
@@ -88,6 +101,35 @@ class AppRouter {
         path: AppRoutes.socialMediaSelection,
         name: 'socialMediaSelection',
         builder: (context, state) => const SocialMediaSelectionPage(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.socialUsername,
+        name: 'socialUsername',
+        builder: (context, state) {
+          final socialMedia =
+              state.uri.queryParameters['socialMedia'] ?? 'Instagram';
+          return SocialUsernamePage(selectedSocialMedia: socialMedia);
+        },
+      ),
+
+      GoRoute(
+        path: AppRoutes.verificationTimeline,
+        name: 'verificationTimeline',
+        builder: (context, state) {
+          final username = state.uri.queryParameters['username'];
+          final initialStatus = state.uri.queryParameters['status'];
+          return VerificationTimelinePage(
+            username: username,
+            initialStatus: initialStatus,
+          );
+        },
+      ),
+
+      GoRoute(
+        path: AppRoutes.statusLookup,
+        name: 'statusLookup',
+        builder: (context, state) => const StatusLookupPage(),
       ),
 
       // Keeps tab state when switching between tabs
@@ -170,9 +212,8 @@ class AppRouter {
       }
 
       // If user is not logged in and trying to access protected routes, redirect to intro
-      if (!isLoggedIn &&
-          (state.matchedLocation == AppRoutes.organizationFeed ||
-              state.matchedLocation == AppRoutes.protestorFeed)) {
+      // Protestor feed is PUBLIC; only organization feed requires auth
+      if (!isLoggedIn && state.matchedLocation == AppRoutes.organizationFeed) {
         return AppRoutes.intro;
       }
 
@@ -216,8 +257,22 @@ extension NavigationExtensions on BuildContext {
   void goToIntro() => go(AppRoutes.intro);
   void goToSignup() => go(AppRoutes.signup);
   void goToCountrySelection() => go(AppRoutes.countrySelection);
+  Future<T?> pushToCountrySelection<T>() =>
+      GoRouter.of(this).push<T>(AppRoutes.countrySelection);
+  Future<T?> pushToCountrySelectionForOrg<T>() => GoRouter.of(
+    this,
+  ).push<T>("${AppRoutes.countrySelection}?orgFlow=1&stepLabel=step%2001");
   void goToOrganizationName() => go(AppRoutes.organizationName);
   void goToSocialMediaSelection() => go(AppRoutes.socialMediaSelection);
+  void goToSocialUsername(String socialMedia) =>
+      go('${AppRoutes.socialUsername}?socialMedia=$socialMedia');
+  void goToVerificationTimeline({
+    String status = 'pending',
+    String? username,
+  }) => go(
+    '${AppRoutes.verificationTimeline}?status=$status${username != null ? '&username=$username' : ''}',
+  );
+  void goToStatusLookup() => go(AppRoutes.statusLookup);
   void goToHome() => go(AppRoutes.protestorFeed);
   void goToProtestorFeed() => go(AppRoutes.protestorFeed);
   void goToOrganizationFeed() => go(AppRoutes.organizationFeed);

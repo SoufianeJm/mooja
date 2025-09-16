@@ -9,9 +9,17 @@ import '../../core/constants/countries.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/di/service_locator.dart';
+import 'verification_cubit.dart';
 
 class CountrySelectionPage extends StatefulWidget {
-  const CountrySelectionPage({super.key});
+  const CountrySelectionPage({
+    super.key,
+    this.forOrganizationFlow = false,
+    this.stepLabel,
+  });
+
+  final bool forOrganizationFlow;
+  final String? stepLabel;
 
   @override
   State<CountrySelectionPage> createState() => _CountrySelectionPageState();
@@ -108,7 +116,12 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
         // Rotated chip
         Transform.rotate(
           angle: -10 * math.pi / 180,
-          child: AppChip(label: 'step 02', backgroundColor: AppColors.lemon),
+          child: AppChip(
+            label:
+                widget.stepLabel ??
+                (widget.forOrganizationFlow ? 'step 01' : 'step 02'),
+            backgroundColor: AppColors.lemon,
+          ),
         ),
         16.v,
         // Title
@@ -250,17 +263,29 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
             AppButton.primary(
               text: 'Continue',
               onPressed: _selectedCountry != null
-                  ? () {
-                      // Save user preferences using dependency injection
-                      _storage.saveSelectedCountryCode(_selectedCountry!.code);
-                      _storage.saveUserType('protestor');
-                      _storage.saveIsFirstTime(false);
+                  ? () async {
+                      // Persist selected country
+                      await _storage.saveSelectedCountryCode(
+                        _selectedCountry!.code,
+                      );
+                      // Update cubit state (org + protestor flows share this)
+                      await sl<VerificationCubit>().setCountry(
+                        _selectedCountry!.code,
+                      );
 
-                      // Return the selected country to the previous screen
+                      if (widget.forOrganizationFlow) {
+                        // Organization verification flow: advance to org name
+                        context.goToOrganizationName();
+                        return;
+                      }
+
+                      // Protestor flow: set user type and pop with result
+                      await _storage.saveUserType('protestor');
+                      await _storage.saveIsFirstTime(false);
+
                       if (Navigator.of(context).canPop()) {
                         Navigator.of(context).pop(_selectedCountry);
                       } else {
-                        // Fallback to home if no previous screen
                         context.goToHome();
                       }
                     }
