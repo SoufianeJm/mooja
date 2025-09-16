@@ -119,18 +119,37 @@ export class OrgsService {
   }
 
   async requestVerification(verifyOrgDto: VerifyOrgDto) {
-    // Perform timing-normalized username availability check
-    const { isAvailable } = await this.checkUsernameAvailability(verifyOrgDto.username);
-    
-    if (!isAvailable) {
-      // Generic message to prevent username enumeration
-      throw new ConflictException(MESSAGES.ERROR.USERNAME_TAKEN);
+    // Generate a candidate username from provided name
+    const base = (verifyOrgDto.name || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .slice(0, 30) || 'org';
+
+    let candidate = base;
+    let suffix = 0;
+
+    // Try to find a unique username with minimal timing leak
+    // Add bounded attempts to avoid long loops
+    for (let i = 0; i < 20; i++) {
+      const { isAvailable } = await this.checkUsernameAvailability(candidate);
+      if (isAvailable) break;
+      suffix++;
+      candidate = `${base}_${suffix}`.slice(0, 50);
+    }
+
+    // Final check; if still not available, append a short hash-like suffix
+    const { isAvailable: finalAvailable } = await this.checkUsernameAvailability(candidate);
+    if (!finalAvailable) {
+      const random = Math.random().toString(36).slice(2, 6);
+      candidate = `${base}_${random}`.slice(0, 50);
     }
 
     // Create org with pending verification status
     const org = await this.prisma.org.create({
       data: {
-        username: verifyOrgDto.username,
+        name: verifyOrgDto.name,
+        username: candidate,
         country: verifyOrgDto.country,
         socialMediaPlatform: verifyOrgDto.socialMediaPlatform || null,
         socialMediaHandle: verifyOrgDto.socialMediaHandle || null,
@@ -138,6 +157,7 @@ export class OrgsService {
       },
       select: {
         id: true,
+        name: true,
         username: true,
         country: true,
         socialMediaPlatform: true,

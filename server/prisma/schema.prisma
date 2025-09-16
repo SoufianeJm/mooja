@@ -22,7 +22,7 @@ model Org {
   country               String?  // Organization's country
   socialMediaPlatform   String?  // Twitter, Instagram, Facebook, TikTok
   socialMediaHandle     String?  // Handle/username on the platform
-  verificationStatus    String   @default("pending") // pending, verified, rejected
+  verificationStatus    String   @default("pending") // pending, under_review, approved, rejected, verified
   pictureUrl            String?  // Organization profile picture URL
   inviteCodeUsed        String?  @unique // The invite code they used to verify (unique for one-to-one relation)
   verifiedAt            DateTime? // When they were verified

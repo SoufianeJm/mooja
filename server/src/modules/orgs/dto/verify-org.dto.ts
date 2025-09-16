@@ -3,13 +3,13 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class VerifyOrgDto {
   @ApiProperty({
-    description: 'Unique username for the organization',
-    example: 'climate_action_nyc'
+    description: "Organization's display name (used to generate username)",
+    example: 'Climate Action NYC'
   })
   @IsString()
   @IsNotEmpty()
-  @MaxLength(50)
-  username: string;
+  @MaxLength(100)
+  name: string;
 
   @ApiProperty({
     description: 'Country where the organization is based',

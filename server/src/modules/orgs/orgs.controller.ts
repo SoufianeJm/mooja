@@ -51,4 +51,16 @@ export class OrgsController {
     }
     return this.orgsService.findByCountry(country);
   }
+
+  @Public()
+  @Get('status')
+  @ApiOperation({ summary: 'Get organization verification status by username' })
+  @ApiResponse({ status: 200, description: 'Status retrieved successfully' })
+  async getStatusByUsername(@Query('username') username: string) {
+    if (!username) {
+      return { verificationStatus: 'pending' };
+    }
+    const org = await this.orgsService.findByUsername(username);
+    return { verificationStatus: org?.verificationStatus ?? 'pending' };
+  }
 }
