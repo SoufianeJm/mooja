@@ -17,6 +17,7 @@ class AppInput extends StatefulWidget {
   final bool autofocus;
   final int? maxLines;
   final bool enabled;
+  final TextCapitalization textCapitalization;
 
   const AppInput({
     super.key,
@@ -35,6 +36,7 @@ class AppInput extends StatefulWidget {
     this.autofocus = false,
     this.maxLines = 1,
     this.enabled = true,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -125,6 +127,7 @@ class _AppInputState extends State<AppInput>
           focusNode: _focusNode,
           obscureText: widget.obscureText,
           keyboardType: widget.keyboardType,
+          textCapitalization: widget.textCapitalization,
           onChanged: widget.onChanged,
           onTap: widget.onTap,
           readOnly: widget.readOnly,

@@ -52,6 +52,9 @@ class StorageService {
   static const String _keyIsFirstTime = 'is_first_time'; // 'true' | 'false'
   static const String _keyPendingOrgName = 'pending_org_name';
   static const String _keyPendingSocialPlatform = 'pending_social_platform';
+  static const String _keyPendingSocialHandle = 'pending_social_handle';
+  static const String _keyPendingOrgUsername = 'pending_org_username';
+  static const String _keyPendingApplicationId = 'pending_application_id';
 
   // Selected country
   Future<void> saveSelectedCountryCode(String countryCode) async {
@@ -109,5 +112,55 @@ class StorageService {
 
   Future<void> deletePendingSocialPlatform() async {
     await _storage.delete(key: _keyPendingSocialPlatform);
+  }
+
+  // Pending social handle (normalized with leading @)
+  Future<void> savePendingSocialHandle(String handle) async {
+    await _storage.write(key: _keyPendingSocialHandle, value: handle);
+  }
+
+  Future<String?> readPendingSocialHandle() async {
+    return await _storage.read(key: _keyPendingSocialHandle);
+  }
+
+  Future<void> deletePendingSocialHandle() async {
+    await _storage.delete(key: _keyPendingSocialHandle);
+  }
+
+  // Backend-generated pending org username (used for status lookups)
+  Future<void> savePendingOrgUsername(String username) async {
+    await _storage.write(key: _keyPendingOrgUsername, value: username);
+  }
+
+  Future<String?> readPendingOrgUsername() async {
+    return await _storage.read(key: _keyPendingOrgUsername);
+  }
+
+  Future<void> deletePendingOrgUsername() async {
+    await _storage.delete(key: _keyPendingOrgUsername);
+  }
+
+  // Backend-generated application id (org.id)
+  Future<void> savePendingApplicationId(String id) async {
+    await _storage.write(key: _keyPendingApplicationId, value: id);
+  }
+
+  Future<String?> readPendingApplicationId() async {
+    return await _storage.read(key: _keyPendingApplicationId);
+  }
+
+  Future<void> deletePendingApplicationId() async {
+    await _storage.delete(key: _keyPendingApplicationId);
+  }
+
+  /// Clear all pending organization verification data
+  Future<void> clearPendingOrgData() async {
+    await Future.wait([
+      deletePendingOrgName(),
+      deletePendingSocialPlatform(),
+      deletePendingSocialHandle(),
+      deletePendingOrgUsername(),
+      deletePendingApplicationId(),
+    ]);
   }
 }

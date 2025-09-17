@@ -48,6 +48,7 @@ class OrgVerificationModal extends StatelessWidget {
               AppButton.primary(
                 text: 'Yes, I did',
                 onPressed: () {
+                  print('DEBUG: Org verification modal - Yes button pressed');
                   Navigator.of(context).pop('yes');
                 },
                 isFullWidth: true,
@@ -56,6 +57,7 @@ class OrgVerificationModal extends StatelessWidget {
               AppButton.secondary(
                 text: 'No, I did not',
                 onPressed: () {
+                  print('DEBUG: Org verification modal - No button pressed');
                   Navigator.of(context).pop('no');
                 },
                 isFullWidth: true,

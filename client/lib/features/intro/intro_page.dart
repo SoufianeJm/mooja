@@ -26,45 +26,57 @@ class _IntroPageState extends State<IntroPage> {
   }
 
   Future<void> _maybeRedirect() async {
+    print('DEBUG: Starting _maybeRedirect');
     final isFirstTime = await _storage.readIsFirstTime();
     final userType = await _storage.readUserType();
+    print('DEBUG: isFirstTime: $isFirstTime, userType: $userType');
 
-    if (!mounted) return;
+    if (!mounted) {
+      print('DEBUG: Widget not mounted, returning');
+      return;
+    }
 
     if (!isFirstTime && userType == 'protestor') {
+      print('DEBUG: Redirecting to home');
       context.goToHome();
       return;
     }
 
+    print('DEBUG: Setting _isCheckingStorage to false');
     setState(() {
       _isCheckingStorage = false;
     });
   }
 
   void _showOrgVerificationModal() {
+    print('DEBUG: Showing org verification modal');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const OrgVerificationModal(),
     ).then((result) {
+      print('DEBUG: Modal result: $result');
       if (result == 'yes') {
         // User confirmed they have an organization
         // Navigate to organization login/registration
+        print('DEBUG: Navigating to login');
         context.goToLogin();
       } else if (result == 'no') {
         // User said they don't have an organization
+        print('DEBUG: Showing not eligible modal');
         _showNotEligibleModal();
       }
     });
   }
 
   void _showNotEligibleModal() {
+    print('DEBUG: Showing not eligible modal from intro');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const NotEligibleModal(),
+      builder: (context) => const NotEligibleModal(fromFeed: false),
     );
   }
 
@@ -115,8 +127,22 @@ class _IntroPageState extends State<IntroPage> {
                     AppButton.primary(
                       text: 'Continue as a protestor',
                       onPressed: () {
+                        print('DEBUG: Protestor button pressed');
+                        print('DEBUG: Context mounted: $mounted');
+                        print(
+                          'DEBUG: goToCountrySelection method exists: ${context.goToCountrySelection}',
+                        );
                         // Navigate to country selection for protestor flow
-                        context.goToCountrySelection();
+                        try {
+                          context.goToCountrySelection();
+                          print(
+                            'DEBUG: goToCountrySelection called successfully',
+                          );
+                        } catch (e) {
+                          print(
+                            'DEBUG: Error calling goToCountrySelection: $e',
+                          );
+                        }
                       },
                       isFullWidth: true,
                     ),
@@ -125,7 +151,11 @@ class _IntroPageState extends State<IntroPage> {
 
                     AppButton.secondary(
                       text: 'Continue as an organization',
-                      onPressed: _showOrgVerificationModal,
+                      onPressed: () {
+                        print('DEBUG: Organization button pressed');
+                        print('DEBUG: Context mounted: $mounted');
+                        _showOrgVerificationModal();
+                      },
                       isFullWidth: true,
                     ),
                   ],

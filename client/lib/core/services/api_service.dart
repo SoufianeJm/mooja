@@ -112,7 +112,26 @@ class ApiService {
     }
   }
 
-  /// Verify organization with invite code (moves status to "verified")
+  /// Verify organization invite code (public endpoint for pre-registration)
+  Future<Map<String, dynamic>> verifyOrgCode({
+    required String applicationId,
+    required String inviteCode,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/orgs/verify-code',
+        data: {
+          'applicationId': applicationId,
+          'inviteCode': inviteCode,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Verify organization with invite code (authenticated endpoint - legacy)
   Future<Map<String, dynamic>> verifyOrgWithCode({
     required String inviteCode,
   }) async {
@@ -128,6 +147,7 @@ class ApiService {
   }
 
   /// Get verification status by username
+  /// Deprecated: Prefer getOrgStatusByApplicationId
   Future<String> getOrgStatusByUsername(String username) async {
     try {
       final response = await _dio.get(
@@ -136,6 +156,62 @@ class ApiService {
       );
       final data = response.data as Map<String, dynamic>;
       return (data['verificationStatus'] as String?) ?? 'pending';
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get verification status by application id (org.id)
+  Future<String> getOrgStatusByApplicationId(String applicationId) async {
+    try {
+      final response = await _dio.get(
+        '/orgs/applications/$applicationId/status',
+      );
+      final data = response.data as Map<String, dynamic>;
+      return (data['verificationStatus'] as String?) ?? 'pending';
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Register organization account after verification
+  Future<Map<String, dynamic>> register({
+    required String name,
+    required String username, 
+    required String password,
+    required String country,
+    String? socialMediaPlatform,
+    String? socialMediaHandle,
+    String? pictureUrl,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/auth/org/register',
+        data: {
+          'name': name,
+          'username': username,
+          'password': password,
+          'country': country,
+          if (socialMediaPlatform != null) 'socialMediaPlatform': socialMediaPlatform,
+          if (socialMediaHandle != null) 'socialMediaHandle': socialMediaHandle,
+          if (pictureUrl != null) 'pictureUrl': pictureUrl,
+        },
+      );
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get application id by username (fallback diagnostic)
+  Future<String?> getApplicationIdByUsername(String username) async {
+    try {
+      final response = await _dio.get(
+        '/orgs/by-username',
+        queryParameters: {'username': username},
+      );
+      final data = response.data as Map<String, dynamic>?;
+      return data?['id'] as String?;
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -158,7 +234,22 @@ class ApiService {
         );
       case DioExceptionType.badResponse:
         final statusCode = e.response?.statusCode ?? 500;
-        final message = e.response?.data?['message'] ?? 'Server error occurred';
+        final data = e.response?.data;
+        String message = 'Server error occurred';
+        
+        if (data != null) {
+          if (data is Map) {
+            // Handle validation errors
+            if (data['message'] is List) {
+              message = (data['message'] as List).join(', ');
+            } else if (data['message'] != null) {
+              message = data['message'].toString();
+            }
+          } else if (data is String) {
+            message = data;
+          }
+        }
+        
         return ApiError(message, statusCode);
       case DioExceptionType.cancel:
         return ApiError('Request was cancelled', 499);

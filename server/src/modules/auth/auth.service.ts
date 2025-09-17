@@ -21,7 +21,62 @@ export class AuthService {
   ) {}
 
   async orgRegister(registerOrgDto: RegisterOrgDto) {
-    // Register the organization
+    // Check if org exists and has validated invite code
+    const existingOrg = await this.orgsService.findByUsername(registerOrgDto.username);
+    
+    if (existingOrg) {
+      // Check if org has a validated invite code but no password yet
+      if (existingOrg.inviteCodeUsed && !existingOrg.password) {
+        // Complete the registration and mark as verified
+        const hashedPassword = await HashUtil.hash(registerOrgDto.password);
+        
+        // Update org with password and mark as verified in transaction
+        const [updatedOrg, updatedInvite] = await this.prisma.$transaction([
+          this.prisma.org.update({
+            where: { id: existingOrg.id },
+            data: {
+              password: hashedPassword,
+              verificationStatus: 'verified',
+              verifiedAt: new Date(),
+              // Update other fields from registration
+              name: registerOrgDto.name || existingOrg.name,
+              country: registerOrgDto.country || existingOrg.country,
+              socialMediaPlatform: registerOrgDto.socialMediaPlatform || existingOrg.socialMediaPlatform,
+              socialMediaHandle: registerOrgDto.socialMediaHandle || existingOrg.socialMediaHandle,
+            },
+          }),
+          // Mark the invite code as used
+          this.prisma.inviteCode.update({
+            where: { code: existingOrg.inviteCodeUsed },
+            data: { isUsed: true },
+          }),
+        ]);
+        
+        // Generate JWT tokens
+        const tokens = this.generateTokens({ 
+          id: updatedOrg.id, 
+          username: updatedOrg.username 
+        });
+        
+        // Remove password from response
+        const { password, ...publicOrgData } = updatedOrg;
+        
+        const response = {
+          org: publicOrgData,
+          accessToken: tokens.accessToken,
+          refreshToken: tokens.refreshToken,
+          message: 'Organization registered and verified successfully',
+        };
+        
+        return plainToInstance(AuthResponseDto, response, { 
+          excludeExtraneousValues: true 
+        });
+      } else {
+        throw new BadRequestException('Username already taken');
+      }
+    }
+    
+    // If no existing org, proceed with normal registration (without verification)
     const result = await this.orgsService.register(registerOrgDto);
     
     // Generate JWT tokens for the new organization

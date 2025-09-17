@@ -63,8 +63,10 @@ class VerificationCubit extends Cubit<VerificationState> {
     emit(state.copyWith(socialPlatform: platform, errorMessage: null));
   }
 
-  void setHandle(String handle) {
-    emit(state.copyWith(socialHandle: handle, errorMessage: null));
+  Future<void> setHandle(String handle) async {
+    final normalized = handle.startsWith('@') ? handle : '@$handle';
+    await storage.savePendingSocialHandle(normalized);
+    emit(state.copyWith(socialHandle: normalized, errorMessage: null));
   }
 
   Future<void> submit() async {
@@ -97,12 +99,21 @@ class VerificationCubit extends Cubit<VerificationState> {
     emit(state.copyWith(isSubmitting: true, errorMessage: null));
     try {
       final normalizedHandle = handle.startsWith('@') ? handle : '@$handle';
-      await api.requestOrgVerification(
+      final result = await api.requestOrgVerification(
         name: name,
         country: country,
         socialMediaPlatform: platform,
         socialMediaHandle: normalizedHandle,
       );
+      // Persist backend-generated identifiers for consistent status lookups
+      final backendUsername = result['org']?['username'] as String?;
+      final applicationId = result['org']?['id'] as String?;
+      if (backendUsername != null && backendUsername.isNotEmpty) {
+        await storage.savePendingOrgUsername(backendUsername);
+      }
+      if (applicationId != null && applicationId.isNotEmpty) {
+        await storage.savePendingApplicationId(applicationId);
+      }
       emit(state.copyWith(isSubmitting: false, errorMessage: null));
     } catch (e) {
       final message = e is ApiError

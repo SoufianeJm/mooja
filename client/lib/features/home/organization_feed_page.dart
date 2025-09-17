@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/themes/theme_exports.dart';
-import '../../core/di/service_locator.dart';
-import '../../features/auth/bloc/auth_bloc.dart';
 import '../../core/router/app_router.dart';
+import '../../core/di/service_locator.dart';
+import '../../core/services/user_context_service.dart';
 
 /// Organization-specific feed page with NGO tools and features
 class OrganizationFeedPage extends StatelessWidget {
@@ -102,11 +102,12 @@ class OrganizationFeedPage extends StatelessWidget {
   }
 
   void _handleLogout(BuildContext context) async {
-    final authBloc = sl<AuthBloc>();
-    authBloc.add(const LogoutRequested());
+    final userContext = sl<UserContextService>();
+    await userContext.clearAllUserData();
 
-    // Wait a moment for the logout to complete, then navigate
-    await Future.delayed(const Duration(milliseconds: 100));
-    context.goToIntro();
+    // Navigate back to intro
+    if (context.mounted) {
+      context.goToIntro();
+    }
   }
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../di/service_locator.dart';
-import '../services/auth_service.dart';
+import '../services/storage_service.dart';
+import '../services/user_context_service.dart';
 import '../../features/intro/intro_page.dart';
 import '../../features/auth/login_page.dart';
 import '../../features/auth/signup_page.dart';
@@ -12,11 +14,16 @@ import '../../features/auth/social_media_selection_page.dart';
 import '../../features/auth/social_username_page.dart';
 import '../../features/auth/verification_timeline_page.dart';
 import '../../features/auth/status_lookup_page.dart';
+import '../../features/auth/code_verification_page.dart';
+import '../../features/auth/org_registration_page.dart';
+import '../../features/auth/bloc/auth_bloc.dart';
 import '../../features/home/widgets/feed_shell.dart';
 import '../../features/home/protestor_feed_page.dart';
 import '../../features/home/organization_feed_page.dart';
 import '../../features/placeholder/placeholder_screen.dart';
 import '../../features/home/widgets/tab_navigation.dart';
+import '../../features/intro/widgets/org_verification_modal.dart';
+import '../../features/intro/widgets/not_eligible_modal.dart';
 
 // Route path constants - single source of truth
 abstract class AppRoutes {
@@ -30,6 +37,8 @@ abstract class AppRoutes {
   static const socialUsername = '/social-username';
   static const verificationTimeline = '/verification-timeline';
   static const statusLookup = '/status-lookup';
+  static const codeVerification = '/code-verification';
+  static const orgRegistration = '/org-registration';
   static const home = '/home';
   static const protestorFeed = '/home/protestor';
   static const organizationFeed = '/home/organization';
@@ -55,9 +64,13 @@ class AppRouter {
   //   _isAuthenticated = isAuthenticated;
   // }
 
+  static final RouteObserver<ModalRoute<void>> routeObserver =
+      RouteObserver<ModalRoute<void>>();
+
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.intro,
     debugLogDiagnostics: kDebugMode, // Only log diagnostics in debug mode
+    observers: [routeObserver],
     routes: <RouteBase>[
       // Public routes (no auth required)
       GoRoute(
@@ -132,6 +145,24 @@ class AppRouter {
         builder: (context, state) => const StatusLookupPage(),
       ),
 
+      GoRoute(
+        path: AppRoutes.codeVerification,
+        name: 'codeVerification',
+        builder: (context, state) => const CodeVerificationPage(),
+      ),
+
+      GoRoute(
+        path: AppRoutes.orgRegistration,
+        name: 'orgRegistration',
+        builder: (context, state) {
+          final prefilled = state.uri.queryParameters['username'];
+          return BlocProvider(
+            create: (context) => sl<AuthBloc>(),
+            child: OrgRegistrationPage(prefilledUsername: prefilled),
+          );
+        },
+      ),
+
       // Keeps tab state when switching between tabs
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
@@ -139,9 +170,52 @@ class AppRouter {
             activeTab: navigationShell.currentIndex == 0
                 ? TabType.forYou
                 : TabType.forOrganizations,
-            onTabChanged: (newTab) {
-              final newIndex = newTab == TabType.forYou ? 0 : 1;
-              navigationShell.goBranch(newIndex);
+            onTabChanged: (newTab) async {
+              print('DEBUG: Tab changed to: $newTab');
+              // Handle tab changes using UserContextService
+              if (newTab == TabType.forYou) {
+                print('DEBUG: Switching to For You tab');
+                // Always allow switching to For You tab
+                navigationShell.goBranch(0);
+              } else if (newTab == TabType.forOrganizations) {
+                print('DEBUG: Switching to For Organizations tab');
+                // Use UserContextService to determine org access
+                final userContext = sl<UserContextService>();
+                final canAccess = await userContext.canAccessOrgFeatures();
+                print('DEBUG: Can access org features: $canAccess');
+
+                if (canAccess) {
+                  print(
+                    'DEBUG: User can access org features, switching to org tab',
+                  );
+                  // User is verified org, allow access
+                  navigationShell.goBranch(1);
+                } else {
+                  // Determine where to send them based on journey
+                  final journey = await userContext.getCurrentJourney();
+                  print('DEBUG: User journey: $journey');
+                  if (context.mounted) {
+                    switch (journey) {
+                      case UserJourney.orgPending:
+                        print(
+                          'DEBUG: User has pending org application, going to verification timeline',
+                        );
+                        // Has applied before - go to verification timeline
+                        context.go('/verification-timeline');
+                        break;
+                      case UserJourney.firstTime:
+                      case UserJourney.protestorActive:
+                      default:
+                        print(
+                          'DEBUG: User is protestor, showing eligibility modal from feed',
+                        );
+                        // Show eligibility modal directly (not intro page)
+                        _showOrgVerificationModalFromFeed(context);
+                        break;
+                    }
+                  }
+                }
+              }
             },
             child: navigationShell,
           );
@@ -200,23 +274,51 @@ class AppRouter {
     ],
 
     redirect: (BuildContext context, GoRouterState state) async {
-      // Check if user is already logged in
-      final authService = sl<AuthService>();
-      final isLoggedIn = await authService.isLoggedIn();
+      final storage = sl<StorageService>();
+      final isFirstTime = await storage.readIsFirstTime();
+      final userType = await storage.readUserType();
 
-      // If user is logged in and trying to access intro/login, redirect to home
-      if (isLoggedIn &&
-          (state.matchedLocation == AppRoutes.intro ||
-              state.matchedLocation == AppRoutes.login)) {
-        return AppRoutes.organizationFeed;
+      print(
+        'DEBUG: Router redirect - isFirstTime: $isFirstTime, userType: $userType, location: ${state.matchedLocation}',
+      );
+
+      // For first-time users, allow them to go through their respective flows
+      if (isFirstTime) {
+        // Allow access to intro and all auth/onboarding pages
+        final allowedFirstTimeRoutes = [
+          AppRoutes.intro,
+          AppRoutes.countrySelection,
+          AppRoutes.organizationName,
+          AppRoutes.socialMediaSelection,
+          AppRoutes.socialUsername,
+          AppRoutes.verificationTimeline,
+          AppRoutes.statusLookup,
+          AppRoutes.codeVerification,
+          AppRoutes.orgRegistration,
+          AppRoutes.login,
+          AppRoutes.signup,
+        ];
+
+        // Only redirect if trying to access protected routes (like feed pages)
+        if (!allowedFirstTimeRoutes.contains(state.matchedLocation)) {
+          print(
+            'DEBUG: First-time user trying to access protected route, redirecting to intro',
+          );
+          return AppRoutes.intro;
+        }
+      } else {
+        // For returning users, redirect based on user type
+        if (userType == 'protestor') {
+          // Returning protestors should go to feed, not intro
+          if (state.matchedLocation == AppRoutes.intro) {
+            print('DEBUG: Returning protestor on intro, redirecting to feed');
+            return AppRoutes.protestorFeed;
+          }
+        }
+        // For orgs, let the tab navigation handle the routing logic
       }
 
-      // If user is not logged in and trying to access protected routes, redirect to intro
-      // Protestor feed is PUBLIC; only organization feed requires auth
-      if (!isLoggedIn && state.matchedLocation == AppRoutes.organizationFeed) {
-        return AppRoutes.intro;
-      }
-
+      print('DEBUG: Router redirect - no redirect needed');
       return null;
     },
 
@@ -251,6 +353,40 @@ class AppRouter {
   );
 }
 
+// Helper function to show org verification modal from feed context
+void _showOrgVerificationModalFromFeed(BuildContext context) {
+  print('DEBUG: Showing org verification modal from feed context');
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => const OrgVerificationModal(),
+  ).then((result) {
+    print('DEBUG: Modal result from feed: $result');
+    if (result == 'yes') {
+      // User confirmed they have an organization
+      // Navigate to organization login/registration
+      print('DEBUG: Navigating to login from feed modal');
+      context.goToLogin();
+    } else if (result == 'no') {
+      // User said they don't have an organization
+      print('DEBUG: Showing not eligible modal from feed');
+      _showNotEligibleModalFromFeed(context);
+    }
+  });
+}
+
+// Helper function to show not eligible modal from feed context
+void _showNotEligibleModalFromFeed(BuildContext context) {
+  print('DEBUG: Showing not eligible modal from feed context');
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => const NotEligibleModal(fromFeed: true),
+  );
+}
+
 extension NavigationExtensions on BuildContext {
   // Current navigation methods
   void goToLogin() => go(AppRoutes.login);
@@ -269,8 +405,15 @@ extension NavigationExtensions on BuildContext {
   void goToVerificationTimeline({
     String status = 'pending',
     String? username,
+    bool fromIntro = false,
   }) => go(
-    '${AppRoutes.verificationTimeline}?status=$status${username != null ? '&username=$username' : ''}',
+    '${AppRoutes.verificationTimeline}?status=$status${username != null ? '&username=$username' : ''}${fromIntro ? '&from=intro' : ''}',
+  );
+  void goToCodeVerification() => go(AppRoutes.codeVerification);
+  void goToOrgRegistration({String? prefilledUsername}) => go(
+    prefilledUsername == null
+        ? AppRoutes.orgRegistration
+        : '${AppRoutes.orgRegistration}?username=$prefilledUsername',
   );
   void goToStatusLookup() => go(AppRoutes.statusLookup);
   void goToHome() => go(AppRoutes.protestorFeed);

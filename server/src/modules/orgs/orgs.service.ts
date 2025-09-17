@@ -51,6 +51,81 @@ export class OrgsService {
     };
   }
 
+  /**
+   * Verify application code (public endpoint for pre-registration)
+   */
+  async verifyApplicationCode(applicationId: string, inviteCode: string) {
+    // Get the organization by application ID
+    const org = await this.prisma.org.findUnique({
+      where: { id: applicationId },
+    });
+
+    if (!org) {
+      throw new NotFoundException('Application not found');
+    }
+
+    // Check if already verified
+    if (org.verificationStatus === 'verified') {
+      return {
+        message: 'Organization is already verified',
+        verified: true,
+        org: {
+          id: org.id,
+          name: org.name,
+          username: org.username,
+        },
+      };
+    }
+
+    // Check if organization is in approved status
+    if (org.verificationStatus !== 'approved') {
+      throw new BadRequestException('Application is not approved for verification');
+    }
+
+    // Check the invite code
+    const invite = await this.prisma.inviteCode.findUnique({
+      where: { code: inviteCode },
+    });
+
+    if (!invite) {
+      throw new BadRequestException('Invalid invite code');
+    }
+
+    // Check if invite is already used
+    if (invite.isUsed) {
+      throw new BadRequestException('This invite code has already been used');
+    }
+
+    // Check if invite is expired
+    if (new Date() > invite.expiresAt) {
+      throw new BadRequestException('This invite code has expired');
+    }
+
+    // Don't mark as verified yet - just validate the code and save it for later
+    // The invite code will be marked as used only after registration is complete
+    const updatedOrg = await this.prisma.org.update({
+      where: { id: applicationId },
+      data: {
+        // Keep status as approved, not verified yet
+        inviteCodeUsed: inviteCode, // Store the code for later verification
+      },
+    });
+
+    return {
+      message: 'Invite code validated successfully. Please create your account to complete verification.',
+      validated: true, // Changed from verified to validated
+      org: {
+        id: updatedOrg.id,
+        name: updatedOrg.name,
+        username: updatedOrg.username,
+        verificationStatus: updatedOrg.verificationStatus,
+      },
+    };
+  }
+
+  /**
+   * Verify with invite code (authenticated endpoint for existing orgs)
+   */
   async verifyWithInviteCode(orgId: string, inviteCode: string) {
     // Get the organization
     const org = await this.prisma.org.findUnique({

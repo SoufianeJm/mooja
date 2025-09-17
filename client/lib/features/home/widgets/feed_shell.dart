@@ -37,7 +37,11 @@ class _FeedShellState extends State<FeedShell> {
                   children: [
                     TabNavigation(
                       activeTab: widget.activeTab,
-                      onTabChanged: widget.onTabChanged,
+                      onTabChanged: (tab) {
+                        // Simply forward tab changes to the router
+                        // The router will handle the actual navigation
+                        widget.onTabChanged(tab);
+                      },
                     ),
                     24.v,
                     Expanded(child: widget.child),
@@ -55,13 +59,13 @@ class _FeedShellState extends State<FeedShell> {
               content: Text('Contribute tapped - Navigate to create protest'),
             ),
           );
-          // TODO: Navigate to contribution board
+          // TODO(feed, 2024-12-17): Navigate to contribution board
         },
         onAddTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Add tapped - Quick action')),
           );
-          // TODO: Show menu
+          // TODO(feed, 2024-12-17): Show menu
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,

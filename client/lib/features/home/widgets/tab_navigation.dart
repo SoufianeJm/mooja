@@ -66,7 +66,7 @@ class _TabItem extends StatelessWidget {
             width: 28,
             height: 2,
             decoration: BoxDecoration(
-              color: isActive 
+              color: isActive
                   ? ThemeColors.textPrimary(context)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(1),

@@ -4,7 +4,9 @@ import '../../../core/widgets/buttons/app_button.dart';
 import '../../../core/widgets/app_chip.dart';
 
 class NotEligibleModal extends StatelessWidget {
-  const NotEligibleModal({super.key});
+  const NotEligibleModal({super.key, this.fromFeed = false});
+
+  final bool fromFeed;
 
   @override
   Widget build(BuildContext context) {
@@ -44,8 +46,11 @@ class NotEligibleModal extends StatelessWidget {
 
           // Button
           AppButton.primary(
-            text: 'Go back to Intro screen',
+            text: fromFeed ? 'Go back to Feed' : 'Go back to Intro screen',
             onPressed: () {
+              print(
+                'DEBUG: Not eligible modal - Go back button pressed (fromFeed: $fromFeed)',
+              );
               Navigator.of(context).pop();
             },
             isFullWidth: true,

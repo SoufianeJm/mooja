@@ -15,18 +15,11 @@ export class RegisterOrgDto {
 
   @ApiProperty({ 
     description: 'Password for login',
-    example: 'SecurePass123!',
+    example: 'password123',
     minLength: 8
   })
-  @IsStrongPassword({
-    minLength: 8,
-    minLowercase: 1,
-    minUppercase: 1,
-    minNumbers: 1,
-    minSymbols: 1,
-  }, {
-    message: 'Password must be at least 8 characters with uppercase, lowercase, number and symbol'
-  })
+  @IsString()
+  @MinLength(8, { message: 'Password must be at least 8 characters' })
   password: string;
 
   @ApiPropertyOptional({ description: 'Country of the organization' })
