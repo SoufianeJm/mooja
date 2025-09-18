@@ -24,6 +24,8 @@ import '../../features/placeholder/placeholder_screen.dart';
 import '../../features/home/widgets/tab_navigation.dart';
 import '../../features/intro/widgets/org_verification_modal.dart';
 import '../../features/intro/widgets/not_eligible_modal.dart';
+import '../navigation/navigation_guard.dart';
+import '../state/state_validator.dart';
 
 // Route path constants - single source of truth
 abstract class AppRoutes {
@@ -172,6 +174,13 @@ class AppRouter {
                 : TabType.forOrganizations,
             onTabChanged: (newTab) async {
               print('DEBUG: Tab changed to: $newTab');
+
+              // Validate state before tab changes
+              if (!await StateValidator.validateBeforeNavigation()) {
+                print('DEBUG: State validation failed during tab change');
+                return;
+              }
+
               // Handle tab changes using UserContextService
               if (newTab == TabType.forYou) {
                 print('DEBUG: Switching to For You tab');
@@ -179,6 +188,7 @@ class AppRouter {
                 navigationShell.goBranch(0);
               } else if (newTab == TabType.forOrganizations) {
                 print('DEBUG: Switching to For Organizations tab');
+
                 // Use UserContextService to determine org access
                 final userContext = sl<UserContextService>();
                 final canAccess = await userContext.canAccessOrgFeatures();
@@ -274,6 +284,12 @@ class AppRouter {
     ],
 
     redirect: (BuildContext context, GoRouterState state) async {
+      // Validate state before any navigation
+      if (!await StateValidator.validateBeforeNavigation()) {
+        print('DEBUG: State validation failed, using safe route');
+        return await NavigationGuard.getSafeRoute();
+      }
+
       final storage = sl<StorageService>();
       final isFirstTime = await storage.readIsFirstTime();
       final userType = await storage.readUserType();
@@ -281,6 +297,24 @@ class AppRouter {
       print(
         'DEBUG: Router redirect - isFirstTime: $isFirstTime, userType: $userType, location: ${state.matchedLocation}',
       );
+
+      // Check if navigation is valid (only if actually navigating somewhere)
+      if (state.uri.toString() != state.matchedLocation) {
+        print(
+          'DEBUG: Checking navigation from "${state.uri.toString()}" to "${state.matchedLocation}"',
+        );
+        final canNavigate = await NavigationGuard.canNavigate(
+          state.uri.toString(),
+          state.matchedLocation,
+        );
+
+        if (!canNavigate) {
+          print('DEBUG: Navigation blocked by guard, using safe route');
+          return await NavigationGuard.getSafeRoute();
+        }
+      } else {
+        print('DEBUG: No navigation needed, already on correct route');
+      }
 
       // For first-time users, allow them to go through their respective flows
       if (isFirstTime) {
@@ -356,23 +390,32 @@ class AppRouter {
 // Helper function to show org verification modal from feed context
 void _showOrgVerificationModalFromFeed(BuildContext context) {
   print('DEBUG: Showing org verification modal from feed context');
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: Colors.transparent,
-    builder: (context) => const OrgVerificationModal(),
-  ).then((result) {
-    print('DEBUG: Modal result from feed: $result');
-    if (result == 'yes') {
-      // User confirmed they have an organization
-      // Navigate to organization login/registration
-      print('DEBUG: Navigating to login from feed modal');
-      context.goToLogin();
-    } else if (result == 'no') {
-      // User said they don't have an organization
-      print('DEBUG: Showing not eligible modal from feed');
-      _showNotEligibleModalFromFeed(context);
+
+  // Validate state before showing modal
+  StateValidator.validateBeforeNavigation().then((isValid) {
+    if (!isValid) {
+      print('DEBUG: State validation failed, not showing modal');
+      return;
     }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const OrgVerificationModal(),
+    ).then((result) {
+      print('DEBUG: Modal result from feed: $result');
+      if (result == 'yes') {
+        // User confirmed they have an organization
+        // Navigate to organization login/registration
+        print('DEBUG: Navigating to login from feed modal');
+        context.goToLogin();
+      } else if (result == 'no') {
+        // User said they don't have an organization
+        print('DEBUG: Showing not eligible modal from feed');
+        _showNotEligibleModalFromFeed(context);
+      }
+    });
   });
 }
 
