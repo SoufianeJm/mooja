@@ -1,5 +1,6 @@
 import '../services/storage_service.dart';
 import '../di/service_locator.dart';
+import 'package:flutter/foundation.dart';
 
 /// Validates and recovers from corrupted or inconsistent app state
 class StateValidator {
@@ -18,14 +19,15 @@ class StateValidator {
 
       return true;
     } catch (e) {
-      print('STATE_VALIDATOR: Error validating state: $e');
+      if (kDebugMode) debugPrint('STATE_VALIDATOR: Error validating state: $e');
       return false;
     }
   }
 
   /// Recover from corrupted state by resetting to safe defaults
   static Future<void> recover() async {
-    print('STATE_VALIDATOR: Recovering from corrupted state');
+    if (kDebugMode)
+      debugPrint('STATE_VALIDATOR: Recovering from corrupted state');
 
     try {
       // Reset to safe protestor state
@@ -35,9 +37,10 @@ class StateValidator {
       // Clear any corrupted org data
       await _storage.clearPendingOrgData();
 
-      print('STATE_VALIDATOR: State recovered successfully');
+      if (kDebugMode)
+        debugPrint('STATE_VALIDATOR: State recovered successfully');
     } catch (e) {
-      print('STATE_VALIDATOR: Error during recovery: $e');
+      if (kDebugMode) debugPrint('STATE_VALIDATOR: Error during recovery: $e');
       // If recovery fails, clear everything
       await _storage.clear();
       await _storage.saveUserType('protestor');
@@ -64,7 +67,8 @@ class StateValidator {
   /// Validate state before critical operations
   static Future<bool> validateBeforeNavigation() async {
     if (!await isValid()) {
-      print('STATE_VALIDATOR: Invalid state detected, recovering...');
+      if (kDebugMode)
+        debugPrint('STATE_VALIDATOR: Invalid state detected, recovering...');
       await recover();
       return false;
     }

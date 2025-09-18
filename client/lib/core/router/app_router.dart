@@ -173,52 +173,60 @@ class AppRouter {
                 ? TabType.forYou
                 : TabType.forOrganizations,
             onTabChanged: (newTab) async {
-              print('DEBUG: Tab changed to: $newTab');
+              if (kDebugMode) debugPrint('DEBUG: Tab changed to: $newTab');
 
               // Validate state before tab changes
               if (!await StateValidator.validateBeforeNavigation()) {
-                print('DEBUG: State validation failed during tab change');
+                if (kDebugMode)
+                  debugPrint(
+                    'DEBUG: State validation failed during tab change',
+                  );
                 return;
               }
 
               // Handle tab changes using UserContextService
               if (newTab == TabType.forYou) {
-                print('DEBUG: Switching to For You tab');
+                if (kDebugMode) debugPrint('DEBUG: Switching to For You tab');
                 // Always allow switching to For You tab
                 navigationShell.goBranch(0);
               } else if (newTab == TabType.forOrganizations) {
-                print('DEBUG: Switching to For Organizations tab');
+                if (kDebugMode)
+                  debugPrint('DEBUG: Switching to For Organizations tab');
 
                 // Use UserContextService to determine org access
                 final userContext = sl<UserContextService>();
                 final canAccess = await userContext.canAccessOrgFeatures();
-                print('DEBUG: Can access org features: $canAccess');
+                if (kDebugMode)
+                  debugPrint('DEBUG: Can access org features: $canAccess');
 
                 if (canAccess) {
-                  print(
-                    'DEBUG: User can access org features, switching to org tab',
-                  );
+                  if (kDebugMode)
+                    debugPrint(
+                      'DEBUG: User can access org features, switching to org tab',
+                    );
                   // User is verified org, allow access
                   navigationShell.goBranch(1);
                 } else {
                   // Determine where to send them based on journey
                   final journey = await userContext.getCurrentJourney();
-                  print('DEBUG: User journey: $journey');
+                  if (kDebugMode) debugPrint('DEBUG: User journey: $journey');
                   if (context.mounted) {
                     switch (journey) {
                       case UserJourney.orgPending:
-                        print(
-                          'DEBUG: User has pending org application, going to verification timeline',
-                        );
+                        if (kDebugMode)
+                          debugPrint(
+                            'DEBUG: User has pending org application, going to verification timeline',
+                          );
                         // Has applied before - go to verification timeline
                         context.go('/verification-timeline');
                         break;
                       case UserJourney.firstTime:
                       case UserJourney.protestorActive:
                       default:
-                        print(
-                          'DEBUG: User is protestor, showing eligibility modal from feed',
-                        );
+                        if (kDebugMode)
+                          debugPrint(
+                            'DEBUG: User is protestor, showing eligibility modal from feed',
+                          );
                         // Show eligibility modal directly (not intro page)
                         _showOrgVerificationModalFromFeed(context);
                         break;
@@ -286,7 +294,8 @@ class AppRouter {
     redirect: (BuildContext context, GoRouterState state) async {
       // Validate state before any navigation
       if (!await StateValidator.validateBeforeNavigation()) {
-        print('DEBUG: State validation failed, using safe route');
+        if (kDebugMode)
+          debugPrint('DEBUG: State validation failed, using safe route');
         return await NavigationGuard.getSafeRoute();
       }
 
@@ -294,26 +303,32 @@ class AppRouter {
       final isFirstTime = await storage.readIsFirstTime();
       final userType = await storage.readUserType();
 
-      print(
-        'DEBUG: Router redirect - isFirstTime: $isFirstTime, userType: $userType, location: ${state.matchedLocation}',
-      );
+      if (kDebugMode) {
+        debugPrint(
+          'DEBUG: Router redirect - isFirstTime: $isFirstTime, userType: $userType, location: ${state.matchedLocation}',
+        );
+      }
 
       // Check if navigation is valid (only if actually navigating somewhere)
       if (state.uri.toString() != state.matchedLocation) {
-        print(
-          'DEBUG: Checking navigation from "${state.uri.toString()}" to "${state.matchedLocation}"',
-        );
+        if (kDebugMode) {
+          debugPrint(
+            'DEBUG: Checking navigation from "${state.uri.toString()}" to "${state.matchedLocation}"',
+          );
+        }
         final canNavigate = await NavigationGuard.canNavigate(
           state.uri.toString(),
           state.matchedLocation,
         );
 
         if (!canNavigate) {
-          print('DEBUG: Navigation blocked by guard, using safe route');
+          if (kDebugMode)
+            debugPrint('DEBUG: Navigation blocked by guard, using safe route');
           return await NavigationGuard.getSafeRoute();
         }
       } else {
-        print('DEBUG: No navigation needed, already on correct route');
+        if (kDebugMode)
+          debugPrint('DEBUG: No navigation needed, already on correct route');
       }
 
       // For first-time users, allow them to go through their respective flows
@@ -333,11 +348,22 @@ class AppRouter {
           AppRoutes.signup,
         ];
 
+        // If user has a pending application, allow feed access as protestor
+        final pendingAppId = await storage.readPendingApplicationId();
+        final pendingUsername = await storage.readPendingOrgUsername();
+        final hasPending =
+            (pendingAppId != null && pendingAppId.isNotEmpty) ||
+            (pendingUsername != null && pendingUsername.isNotEmpty);
+
+        final isFeed = state.matchedLocation == AppRoutes.protestorFeed;
+
         // Only redirect if trying to access protected routes (like feed pages)
-        if (!allowedFirstTimeRoutes.contains(state.matchedLocation)) {
-          print(
-            'DEBUG: First-time user trying to access protected route, redirecting to intro',
-          );
+        if (!allowedFirstTimeRoutes.contains(state.matchedLocation) &&
+            !(hasPending && isFeed)) {
+          if (kDebugMode)
+            debugPrint(
+              'DEBUG: First-time user trying to access protected route, redirecting to intro',
+            );
           return AppRoutes.intro;
         }
       } else {
@@ -345,14 +371,27 @@ class AppRouter {
         if (userType == 'protestor') {
           // Returning protestors should go to feed, not intro
           if (state.matchedLocation == AppRoutes.intro) {
-            print('DEBUG: Returning protestor on intro, redirecting to feed');
+            if (kDebugMode)
+              debugPrint(
+                'DEBUG: Returning protestor on intro, redirecting to feed',
+              );
             return AppRoutes.protestorFeed;
           }
+        } else if (userType == 'org') {
+          // Returning orgs with token should not see intro on cold start
+          final hasToken = await sl<StorageService>().hasAuthToken();
+          if (hasToken && state.matchedLocation == AppRoutes.intro) {
+            if (kDebugMode)
+              debugPrint(
+                'DEBUG: Returning org on intro with token, redirecting to org feed',
+              );
+            return AppRoutes.organizationFeed;
+          }
         }
-        // For orgs, let the tab navigation handle the routing logic
+        // For orgs without token, let the tab navigation handle the routing logic
       }
 
-      print('DEBUG: Router redirect - no redirect needed');
+      if (kDebugMode) debugPrint('DEBUG: Router redirect - no redirect needed');
       return null;
     },
 
@@ -389,12 +428,14 @@ class AppRouter {
 
 // Helper function to show org verification modal from feed context
 void _showOrgVerificationModalFromFeed(BuildContext context) {
-  print('DEBUG: Showing org verification modal from feed context');
+  if (kDebugMode)
+    debugPrint('DEBUG: Showing org verification modal from feed context');
 
   // Validate state before showing modal
   StateValidator.validateBeforeNavigation().then((isValid) {
     if (!isValid) {
-      print('DEBUG: State validation failed, not showing modal');
+      if (kDebugMode)
+        debugPrint('DEBUG: State validation failed, not showing modal');
       return;
     }
 
@@ -404,15 +445,17 @@ void _showOrgVerificationModalFromFeed(BuildContext context) {
       backgroundColor: Colors.transparent,
       builder: (context) => const OrgVerificationModal(),
     ).then((result) {
-      print('DEBUG: Modal result from feed: $result');
+      if (!context.mounted) return;
+      if (kDebugMode) debugPrint('DEBUG: Modal result from feed: $result');
       if (result == 'yes') {
-        // User confirmed they have an organization
-        // Navigate to organization login/registration
-        print('DEBUG: Navigating to login from feed modal');
+        if (!context.mounted) return;
+        if (kDebugMode)
+          debugPrint('DEBUG: Navigating to login from feed modal');
         context.goToLogin();
       } else if (result == 'no') {
-        // User said they don't have an organization
-        print('DEBUG: Showing not eligible modal from feed');
+        if (!context.mounted) return;
+        if (kDebugMode)
+          debugPrint('DEBUG: Showing not eligible modal from feed');
         _showNotEligibleModalFromFeed(context);
       }
     });
@@ -421,7 +464,8 @@ void _showOrgVerificationModalFromFeed(BuildContext context) {
 
 // Helper function to show not eligible modal from feed context
 void _showNotEligibleModalFromFeed(BuildContext context) {
-  print('DEBUG: Showing not eligible modal from feed context');
+  if (kDebugMode)
+    debugPrint('DEBUG: Showing not eligible modal from feed context');
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,

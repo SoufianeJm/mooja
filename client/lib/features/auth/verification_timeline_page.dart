@@ -12,13 +12,13 @@ import 'timeline_cubit.dart';
 class VerificationTimelinePage extends StatelessWidget {
   final String? username; // Kept for compatibility
   final String? initialStatus; // Kept for compatibility
-  
+
   const VerificationTimelinePage({
     super.key,
     this.username,
     this.initialStatus,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -33,7 +33,7 @@ class VerificationTimelinePage extends StatelessWidget {
 
 class _VerificationTimelineView extends StatelessWidget {
   const _VerificationTimelineView();
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -46,7 +46,7 @@ class _VerificationTimelineView extends StatelessWidget {
               return Column(
                 children: [
                   const Spacer(),
-                  
+
                   Center(
                     child: Transform.rotate(
                       angle: -0.1745,
@@ -56,9 +56,9 @@ class _VerificationTimelineView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   Text(
                     'Verification timeline',
                     style: AppTypography.h1SemiBold.copyWith(
@@ -66,9 +66,9 @@ class _VerificationTimelineView extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   const SizedBox(height: 24),
-                  
+
                   if (state.isLoading)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 24),
@@ -82,25 +82,30 @@ class _VerificationTimelineView extends StatelessWidget {
                     _VerticalTimeline(
                       steps: _buildStepsForStatus(state.status),
                     ),
-                  
+
                   const Spacer(),
-                  
+
                   AppButton.primary(
                     text: state.status == 'approved'
                         ? 'Input Verification Code'
                         : 'Continue',
-                    onPressed: () {
+                    onPressed: () async {
                       if (state.status == 'approved') {
                         context.goToCodeVerification();
                       } else {
+                        // Applicants are treated as protestors until verified
+                        final storage = sl<StorageService>();
+                        await storage.saveUserType('protestor');
+                        await storage.saveIsFirstTime(false);
+                        if (!context.mounted) return;
                         context.goToProtestorFeed();
                       }
                     },
                     isFullWidth: true,
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
+
                   AppButton.secondary(
                     text: 'Edit Application',
                     onPressed: state.status == 'approved'
@@ -108,7 +113,7 @@ class _VerificationTimelineView extends StatelessWidget {
                         : () => context.pushToCountrySelectionForOrg(),
                     isFullWidth: true,
                   ),
-                  
+
                   if (state.error != null) ...[
                     const SizedBox(height: 8),
                     Text(
@@ -126,15 +131,16 @@ class _VerificationTimelineView extends StatelessWidget {
       ),
     );
   }
-  
+
   List<_TimelineStep> _buildStepsForStatus(String status) {
-    final isUnderReview = status == 'under_review' ||
+    final isUnderReview =
+        status == 'under_review' ||
         status == 'approved' ||
         status == 'rejected';
     final isDecision = status == 'approved' || status == 'rejected';
     final isApproved = status == 'approved';
     final isRejected = status == 'rejected';
-    
+
     return [
       const _TimelineStep(
         title: 'Request Submitted',
@@ -152,8 +158,8 @@ class _VerificationTimelineView extends StatelessWidget {
         subtitle: isApproved
             ? 'Approved — check your inbox for the invite code'
             : isRejected
-                ? 'Rejected — see reason in admin notices'
-                : 'Awaiting decision from our review team',
+            ? 'Rejected — see reason in admin notices'
+            : 'Awaiting decision from our review team',
       ),
     ];
   }
@@ -162,13 +168,13 @@ class _VerificationTimelineView extends StatelessWidget {
 // Timeline UI Components (kept as-is for consistency)
 class _VerticalTimeline extends StatelessWidget {
   final List<_TimelineStep> steps;
-  
+
   static const double _indicatorSize = 24;
   static const double _lineWidth = 2;
   static const double _spacing = 32;
-  
+
   const _VerticalTimeline({required this.steps});
-  
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -176,7 +182,7 @@ class _VerticalTimeline extends StatelessWidget {
         final index = entry.key;
         final step = entry.value;
         final isLast = index == steps.length - 1;
-        
+
         return _TimelineRow(step: step, isLast: isLast);
       }).toList(),
     );
@@ -186,9 +192,9 @@ class _VerticalTimeline extends StatelessWidget {
 class _TimelineRow extends StatelessWidget {
   final _TimelineStep step;
   final bool isLast;
-  
+
   const _TimelineRow({required this.step, required this.isLast});
-  
+
   @override
   Widget build(BuildContext context) {
     final activeColor = AppColors.gray900;
@@ -196,7 +202,7 @@ class _TimelineRow extends StatelessWidget {
     final textColor = step.active
         ? ThemeColors.textPrimary(context)
         : ThemeColors.textSecondary(context).withValues(alpha: 0.4);
-    
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -225,9 +231,9 @@ class _TimelineRow extends StatelessWidget {
               ),
           ],
         ),
-        
+
         const SizedBox(width: 12),
-        
+
         // Content column
         Expanded(
           child: Padding(
@@ -264,7 +270,7 @@ class _TimelineStep {
   final String title;
   final String? subtitle;
   final bool active;
-  
+
   const _TimelineStep({
     required this.title,
     this.subtitle,
@@ -277,14 +283,14 @@ class _DashedLine extends StatelessWidget {
   final double dashGap;
   final Color dashColor;
   final double width;
-  
+
   const _DashedLine({
     this.dashHeight = 4,
     this.dashGap = 6,
     this.dashColor = Colors.grey,
     this.width = 2,
   });
-  
+
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
@@ -303,36 +309,36 @@ class _DashedLinePainter extends CustomPainter {
   final double dashHeight;
   final double dashGap;
   final double strokeWidth;
-  
+
   const _DashedLinePainter({
     required this.dashColor,
     required this.dashHeight,
     required this.dashGap,
     required this.strokeWidth,
   });
-  
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
       ..color = dashColor
       ..strokeWidth = strokeWidth;
-    
+
     double currentY = 0;
     final totalHeight = size.height;
-    
+
     while (currentY < totalHeight) {
       final endY = (currentY + dashHeight).clamp(0.0, totalHeight);
-      
+
       canvas.drawLine(
         Offset(size.width / 2, currentY),
         Offset(size.width / 2, endY),
         paint,
       );
-      
+
       currentY += dashHeight + dashGap;
     }
   }
-  
+
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

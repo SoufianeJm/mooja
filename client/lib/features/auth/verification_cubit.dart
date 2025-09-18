@@ -91,14 +91,13 @@ class VerificationCubit extends Cubit<VerificationState> {
       emit(state.copyWith(errorMessage: 'Please choose a social platform.'));
       return;
     }
-    if (handle == null || handle.trim().length < 2) {
-      emit(state.copyWith(errorMessage: 'Please enter a valid social handle.'));
-      return;
-    }
+    // Do not enforce format validation for social handle; allow any input
 
     emit(state.copyWith(isSubmitting: true, errorMessage: null));
     try {
-      final normalizedHandle = handle.startsWith('@') ? handle : '@$handle';
+      final normalizedHandle = (handle ?? '').startsWith('@')
+          ? (handle ?? '')
+          : '@${handle ?? ''}';
       final result = await api.requestOrgVerification(
         name: name,
         country: country,

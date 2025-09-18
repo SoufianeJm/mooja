@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../../core/themes/theme_exports.dart';
 import '../../../core/widgets/buttons/app_button.dart';
 import '../../../core/widgets/app_chip.dart';
@@ -35,7 +36,7 @@ class NotEligibleModal extends StatelessWidget {
               Text(
                 'Currently only organizations can\nadd or promote protest',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -48,9 +49,10 @@ class NotEligibleModal extends StatelessWidget {
           AppButton.primary(
             text: fromFeed ? 'Go back to Feed' : 'Go back to Intro screen',
             onPressed: () {
-              print(
-                'DEBUG: Not eligible modal - Go back button pressed (fromFeed: $fromFeed)',
-              );
+              if (kDebugMode)
+                debugPrint(
+                  'DEBUG: Not eligible modal - Go back button pressed (fromFeed: $fromFeed)',
+                );
               Navigator.of(context).pop();
             },
             isFullWidth: true,

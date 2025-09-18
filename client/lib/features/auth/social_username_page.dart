@@ -49,10 +49,11 @@ class _SocialUsernamePageState extends State<SocialUsernamePage> {
 
   void _handleContinue() async {
     final username = _usernameController.text.trim();
-    final error = _validateUsername(username);
-
-    if (error != null) {
-      setState(() => _errorText = error);
+    if (username.isEmpty) {
+      setState(
+        () => _errorText =
+            'Please enter your ${widget.selectedSocialMedia} username',
+      );
       return;
     }
 
@@ -99,12 +100,7 @@ class _SocialUsernamePageState extends State<SocialUsernamePage> {
     }
   }
 
-  String? _validateUsername(String username) {
-    if (username.isEmpty)
-      return 'Please enter your ${widget.selectedSocialMedia} username';
-    if (username.length < 2) return 'Username must be at least 2 characters';
-    return null;
-  }
+  // Removed strict validation; keep minimal helper if needed later
 
   String _getSocialMediaIconPath() {
     final key = widget.selectedSocialMedia.toLowerCase();

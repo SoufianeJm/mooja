@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../../core/themes/theme_exports.dart';
 import '../../../core/widgets/buttons/app_button.dart';
 import '../../../core/widgets/app_chip.dart';
@@ -33,7 +34,7 @@ class OrgVerificationModal extends StatelessWidget {
               Text(
                 'Did you promote protests or engage in digital activism in the past 2 years ?',
                 style: AppTypography.bodyMedium.copyWith(
-                  color: Colors.black.withOpacity(0.5),
+                  color: Colors.black.withValues(alpha: 0.5),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -48,7 +49,10 @@ class OrgVerificationModal extends StatelessWidget {
               AppButton.primary(
                 text: 'Yes, I did',
                 onPressed: () {
-                  print('DEBUG: Org verification modal - Yes button pressed');
+                  if (kDebugMode)
+                    debugPrint(
+                      'DEBUG: Org verification modal - Yes button pressed',
+                    );
                   Navigator.of(context).pop('yes');
                 },
                 isFullWidth: true,
@@ -57,7 +61,10 @@ class OrgVerificationModal extends StatelessWidget {
               AppButton.secondary(
                 text: 'No, I did not',
                 onPressed: () {
-                  print('DEBUG: Org verification modal - No button pressed');
+                  if (kDebugMode)
+                    debugPrint(
+                      'DEBUG: Org verification modal - No button pressed',
+                    );
                   Navigator.of(context).pop('no');
                 },
                 isFullWidth: true,

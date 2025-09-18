@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../core/themes/theme_exports.dart';
 import '../../core/widgets/buttons/app_button.dart';
 import '../../core/router/app_router.dart';
@@ -26,52 +27,64 @@ class _IntroPageState extends State<IntroPage> {
   }
 
   Future<void> _maybeRedirect() async {
-    print('DEBUG: Starting _maybeRedirect');
+    if (kDebugMode) debugPrint('DEBUG: Starting _maybeRedirect');
     final isFirstTime = await _storage.readIsFirstTime();
     final userType = await _storage.readUserType();
-    print('DEBUG: isFirstTime: $isFirstTime, userType: $userType');
+    final hasToken = await _storage.hasAuthToken();
+    if (kDebugMode)
+      debugPrint('DEBUG: isFirstTime: $isFirstTime, userType: $userType');
 
     if (!mounted) {
-      print('DEBUG: Widget not mounted, returning');
+      if (kDebugMode) debugPrint('DEBUG: Widget not mounted, returning');
       return;
     }
 
     if (!isFirstTime && userType == 'protestor') {
-      print('DEBUG: Redirecting to home');
+      if (kDebugMode) debugPrint('DEBUG: Redirecting to home');
       context.goToHome();
       return;
     }
 
-    print('DEBUG: Setting _isCheckingStorage to false');
+    // Bounce logged-in orgs away from intro on cold start
+    if (!isFirstTime && userType == 'org' && hasToken) {
+      if (kDebugMode)
+        debugPrint(
+          'DEBUG: Logged-in org detected on intro, redirecting to org feed',
+        );
+      context.goToOrganizationFeed();
+      return;
+    }
+
+    if (kDebugMode) debugPrint('DEBUG: Setting _isCheckingStorage to false');
     setState(() {
       _isCheckingStorage = false;
     });
   }
 
   void _showOrgVerificationModal() {
-    print('DEBUG: Showing org verification modal');
+    if (kDebugMode) debugPrint('DEBUG: Showing org verification modal');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const OrgVerificationModal(),
     ).then((result) {
-      print('DEBUG: Modal result: $result');
+      if (!mounted) return;
+      if (kDebugMode) debugPrint('DEBUG: Modal result: $result');
       if (result == 'yes') {
-        // User confirmed they have an organization
-        // Navigate to organization login/registration
-        print('DEBUG: Navigating to login');
+        if (!mounted) return;
+        if (kDebugMode) debugPrint('DEBUG: Navigating to login');
         context.goToLogin();
       } else if (result == 'no') {
-        // User said they don't have an organization
-        print('DEBUG: Showing not eligible modal');
+        if (!mounted) return;
+        if (kDebugMode) debugPrint('DEBUG: Showing not eligible modal');
         _showNotEligibleModal();
       }
     });
   }
 
   void _showNotEligibleModal() {
-    print('DEBUG: Showing not eligible modal from intro');
+    if (kDebugMode) debugPrint('DEBUG: Showing not eligible modal from intro');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -127,21 +140,26 @@ class _IntroPageState extends State<IntroPage> {
                     AppButton.primary(
                       text: 'Continue as a protestor',
                       onPressed: () {
-                        print('DEBUG: Protestor button pressed');
-                        print('DEBUG: Context mounted: $mounted');
-                        print(
-                          'DEBUG: goToCountrySelection method exists: ${context.goToCountrySelection}',
-                        );
+                        if (kDebugMode)
+                          debugPrint('DEBUG: Protestor button pressed');
+                        if (kDebugMode)
+                          debugPrint('DEBUG: Context mounted: $mounted');
+                        if (kDebugMode)
+                          debugPrint(
+                            'DEBUG: goToCountrySelection method exists: ${context.goToCountrySelection}',
+                          );
                         // Navigate to country selection for protestor flow
                         try {
                           context.goToCountrySelection();
-                          print(
-                            'DEBUG: goToCountrySelection called successfully',
-                          );
+                          if (kDebugMode)
+                            debugPrint(
+                              'DEBUG: goToCountrySelection called successfully',
+                            );
                         } catch (e) {
-                          print(
-                            'DEBUG: Error calling goToCountrySelection: $e',
-                          );
+                          if (kDebugMode)
+                            debugPrint(
+                              'DEBUG: Error calling goToCountrySelection: $e',
+                            );
                         }
                       },
                       isFullWidth: true,
@@ -152,8 +170,10 @@ class _IntroPageState extends State<IntroPage> {
                     AppButton.secondary(
                       text: 'Continue as an organization',
                       onPressed: () {
-                        print('DEBUG: Organization button pressed');
-                        print('DEBUG: Context mounted: $mounted');
+                        if (kDebugMode)
+                          debugPrint('DEBUG: Organization button pressed');
+                        if (kDebugMode)
+                          debugPrint('DEBUG: Context mounted: $mounted');
                         _showOrgVerificationModal();
                       },
                       isFullWidth: true,
