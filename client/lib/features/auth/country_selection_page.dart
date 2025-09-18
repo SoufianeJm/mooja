@@ -3,9 +3,11 @@ import 'dart:async';
 import 'dart:math' as math;
 import '../../core/themes/theme_exports.dart';
 import '../../core/widgets/buttons/app_button.dart';
+import '../../core/widgets/buttons/app_back_button.dart';
 import '../../core/widgets/inputs/app_input.dart';
 import '../../core/widgets/app_chip.dart';
 import '../../core/constants/countries.dart';
+import '../../core/constants/flow_origin.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/di/service_locator.dart';
@@ -16,10 +18,12 @@ class CountrySelectionPage extends StatefulWidget {
     super.key,
     this.forOrganizationFlow = false,
     this.stepLabel,
+    this.origin = FlowOrigin.unknown,
   });
 
   final bool forOrganizationFlow;
   final String? stepLabel;
+  final FlowOrigin origin;
 
   @override
   State<CountrySelectionPage> createState() => _CountrySelectionPageState();
@@ -95,6 +99,13 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
                   children: [
                     _buildHeader(),
                     16.v,
+                    // Title moved to content group (second group)
+                    Text(
+                      'Where are you from?',
+                      style: AppTypography.h1SemiBold,
+                      textAlign: TextAlign.center,
+                    ),
+                    16.v,
                     _buildSearchInput(),
                     8.v,
                     Expanded(child: _buildCountryList(keyboardOpen)),
@@ -110,27 +121,27 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
   }
 
   Widget _buildHeader() {
-    return Column(
-      children: [
-        16.v,
-        // Rotated chip
-        Transform.rotate(
-          angle: -10 * math.pi / 180,
-          child: AppChip(
-            label:
-                widget.stepLabel ??
-                (widget.forOrganizationFlow ? 'step 01' : 'step 02'),
-            backgroundColor: AppColors.lemon,
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Row(
+        children: [
+          const AppBackButton(),
+          Expanded(
+            child: Center(
+              child: Transform.rotate(
+                angle: -10 * math.pi / 180,
+                child: AppChip(
+                  label:
+                      widget.stepLabel ??
+                      (widget.forOrganizationFlow ? 'step 01' : 'step 02'),
+                  backgroundColor: AppColors.lemon,
+                ),
+              ),
+            ),
           ),
-        ),
-        16.v,
-        // Title
-        Text(
-          'Where are you from?',
-          style: AppTypography.h1SemiBold,
-          textAlign: TextAlign.center,
-        ),
-      ],
+          const SizedBox(width: 52, height: 52),
+        ],
+      ),
     );
   }
 
@@ -275,18 +286,23 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
 
                       if (widget.forOrganizationFlow) {
                         // Organization verification flow: advance to org name
-                        context.goToOrganizationName();
+                        context.pushToOrganizationName();
                         return;
                       }
 
-                      // Protestor flow: set user type and pop with result
+                      // Protestor flow: set user type and finish correctly based on origin
                       await _storage.saveUserType('protestor');
                       await _storage.saveIsFirstTime(false);
-
-                      if (Navigator.of(context).canPop()) {
-                        Navigator.of(context).pop(_selectedCountry);
-                      } else {
+                      if (widget.origin == FlowOrigin.intro) {
+                        // Coming from intro: replace to feed
                         context.goToHome();
+                      } else {
+                        // Coming from other places: pop to previous
+                        if (Navigator.of(context).canPop()) {
+                          Navigator.of(context).pop(_selectedCountry);
+                        } else {
+                          context.goToHome();
+                        }
                       }
                     }
                   : null,

@@ -108,7 +108,7 @@ class _SignupPageState extends State<SignupPage> {
                   AppButton.tertiary(
                     text: 'Already have an account? Log in',
                     onPressed: () {
-                      context.goToLogin();
+                      context.pushToLogin();
                     },
                     isFullWidth: true,
                   ),

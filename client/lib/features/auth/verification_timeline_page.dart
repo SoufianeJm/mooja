@@ -91,7 +91,7 @@ class _VerificationTimelineView extends StatelessWidget {
                         : 'Continue',
                     onPressed: () async {
                       if (state.status == 'approved') {
-                        context.goToCodeVerification();
+                        context.pushToCodeVerification();
                       } else {
                         // Applicants are treated as protestors until verified
                         final storage = sl<StorageService>();

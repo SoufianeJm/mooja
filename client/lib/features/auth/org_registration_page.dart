@@ -40,7 +40,6 @@ class _OrgRegistrationPageState extends State<OrgRegistrationPage> {
     super.dispose();
   }
 
-
   Future<void> _handleRegister() async {
     final username = _usernameController.text.trim();
     final password = _passwordController.text.trim();
@@ -52,23 +51,21 @@ class _OrgRegistrationPageState extends State<OrgRegistrationPage> {
       );
       return;
     }
-    
+
     if (username.length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Username must be at least 3 characters')),
       );
       return;
     }
-    
+
     if (password.length < 8) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password must be at least 8 characters'),
-        ),
+        const SnackBar(content: Text('Password must be at least 8 characters')),
       );
       return;
     }
-    
+
     if (password != confirm) {
       ScaffoldMessenger.of(
         context,
@@ -77,26 +74,30 @@ class _OrgRegistrationPageState extends State<OrgRegistrationPage> {
     }
 
     setState(() => _isLoading = true);
-    
+
     try {
       final apiService = sl<ApiService>();
       final storage = sl<StorageService>();
-      
+
       // Get stored org data
       final orgName = await storage.readPendingOrgName();
       final country = await storage.readSelectedCountryCode();
       final socialPlatform = await storage.readPendingSocialPlatform();
       final socialHandle = await storage.readPendingSocialHandle();
-      
+
       if (orgName == null || country == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Organization data missing. Please restart the process.')),
+          const SnackBar(
+            content: Text(
+              'Organization data missing. Please restart the process.',
+            ),
+          ),
         );
         setState(() => _isLoading = false);
         return;
       }
-      
+
       // Register the organization account
       final response = await apiService.register(
         name: orgName,
@@ -106,24 +107,23 @@ class _OrgRegistrationPageState extends State<OrgRegistrationPage> {
         socialMediaPlatform: socialPlatform,
         socialMediaHandle: socialHandle,
       );
-      
+
       if (!mounted) return;
-      
+
       // Use UserContextService for transaction safety
       final userContext = sl<UserContextService>();
-      
+
       if (response['accessToken'] != null) {
         await userContext.completeOrgVerification(
           token: response['accessToken'],
           refreshToken: response['refreshToken'] ?? '',
         );
       }
-      
+
       if (mounted) {
         // Navigate to organization feed
         context.goToOrganizationFeed();
       }
-      
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

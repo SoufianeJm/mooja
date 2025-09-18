@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../../core/themes/theme_exports.dart';
 import '../../core/widgets/app_chip.dart';
 import '../../core/widgets/buttons/app_button.dart';
+import '../../core/widgets/buttons/app_back_button.dart';
 import '../../core/router/app_router.dart';
 
 class StatusLookupPage extends StatefulWidget {
@@ -29,13 +31,25 @@ class _StatusLookupPageState extends State<StatusLookupPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Center(
-                child: Transform.rotate(
-                  angle: -0.1745,
-                  child: const AppChip(
-                    label: 'Get verified',
-                    backgroundColor: AppColors.lemon,
-                  ),
+              // ===== Header group =====
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: Row(
+                  children: [
+                    const AppBackButton(),
+                    Expanded(
+                      child: Center(
+                        child: Transform.rotate(
+                          angle: -10 * math.pi / 180,
+                          child: const AppChip(
+                            label: 'Get verified',
+                            backgroundColor: AppColors.lemon,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 52, height: 52),
+                  ],
                 ),
               ),
 

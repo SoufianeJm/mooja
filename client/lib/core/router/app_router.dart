@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../di/service_locator.dart';
 import '../services/storage_service.dart';
 import '../services/user_context_service.dart';
+import '../constants/flow_origin.dart';
 import '../../features/intro/intro_page.dart';
 import '../../features/auth/login_page.dart';
 import '../../features/auth/signup_page.dart';
@@ -99,9 +100,11 @@ class AppRouter {
         builder: (context, state) {
           final isOrgFlow = state.uri.queryParameters['orgFlow'] == '1';
           final stepLabel = state.uri.queryParameters['stepLabel'];
+          final origin = state.extra as FlowOrigin? ?? FlowOrigin.unknown;
           return CountrySelectionPage(
             forOrganizationFlow: isOrgFlow,
             stepLabel: stepLabel,
+            origin: origin,
           );
         },
       ),
@@ -451,7 +454,7 @@ void _showOrgVerificationModalFromFeed(BuildContext context) {
         if (!context.mounted) return;
         if (kDebugMode)
           debugPrint('DEBUG: Navigating to login from feed modal');
-        context.goToLogin();
+        context.pushToLogin();
       } else if (result == 'no') {
         if (!context.mounted) return;
         if (kDebugMode)
@@ -477,18 +480,27 @@ void _showNotEligibleModalFromFeed(BuildContext context) {
 extension NavigationExtensions on BuildContext {
   // Current navigation methods
   void goToLogin() => go(AppRoutes.login);
+  Future<T?> pushToLogin<T>() => GoRouter.of(this).push<T>(AppRoutes.login);
   void goToIntro() => go(AppRoutes.intro);
   void goToSignup() => go(AppRoutes.signup);
   void goToCountrySelection() => go(AppRoutes.countrySelection);
-  Future<T?> pushToCountrySelection<T>() =>
-      GoRouter.of(this).push<T>(AppRoutes.countrySelection);
+  Future<T?> pushToCountrySelection<T>({
+    FlowOrigin origin = FlowOrigin.unknown,
+  }) => GoRouter.of(this).push<T>(AppRoutes.countrySelection, extra: origin);
   Future<T?> pushToCountrySelectionForOrg<T>() => GoRouter.of(
     this,
   ).push<T>("${AppRoutes.countrySelection}?orgFlow=1&stepLabel=step%2001");
   void goToOrganizationName() => go(AppRoutes.organizationName);
+  Future<T?> pushToOrganizationName<T>() =>
+      GoRouter.of(this).push<T>(AppRoutes.organizationName);
   void goToSocialMediaSelection() => go(AppRoutes.socialMediaSelection);
+  Future<T?> pushToSocialMediaSelection<T>() =>
+      GoRouter.of(this).push<T>(AppRoutes.socialMediaSelection);
   void goToSocialUsername(String socialMedia) =>
       go('${AppRoutes.socialUsername}?socialMedia=$socialMedia');
+  Future<T?> pushToSocialUsername<T>(String socialMedia) => GoRouter.of(
+    this,
+  ).push<T>('${AppRoutes.socialUsername}?socialMedia=$socialMedia');
   void goToVerificationTimeline({
     String status = 'pending',
     String? username,
@@ -497,12 +509,16 @@ extension NavigationExtensions on BuildContext {
     '${AppRoutes.verificationTimeline}?status=$status${username != null ? '&username=$username' : ''}${fromIntro ? '&from=intro' : ''}',
   );
   void goToCodeVerification() => go(AppRoutes.codeVerification);
+  Future<T?> pushToCodeVerification<T>() =>
+      GoRouter.of(this).push<T>(AppRoutes.codeVerification);
   void goToOrgRegistration({String? prefilledUsername}) => go(
     prefilledUsername == null
         ? AppRoutes.orgRegistration
         : '${AppRoutes.orgRegistration}?username=$prefilledUsername',
   );
   void goToStatusLookup() => go(AppRoutes.statusLookup);
+  Future<T?> pushToStatusLookup<T>() =>
+      GoRouter.of(this).push<T>(AppRoutes.statusLookup);
   void goToHome() => go(AppRoutes.protestorFeed);
   void goToProtestorFeed() => go(AppRoutes.protestorFeed);
   void goToOrganizationFeed() => go(AppRoutes.organizationFeed);

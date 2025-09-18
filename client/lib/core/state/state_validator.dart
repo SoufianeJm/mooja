@@ -11,7 +11,8 @@ class StateValidator {
     try {
       final userType = await _storage.readUserType();
 
-      // Basic validation - userType can be null
+      // If userType is null, this might be a first-time user before initialization
+      // This is now handled by AppInitializer, so we should not warn here
       if (userType == null) return false;
 
       // Validate user type values
@@ -66,12 +67,34 @@ class StateValidator {
 
   /// Validate state before critical operations
   static Future<bool> validateBeforeNavigation() async {
-    if (!await isValid()) {
+    try {
+      final userType = await _storage.readUserType();
+
+      // If userType is null, this is likely a first-time user before proper initialization
+      // Don't show warning as this is expected behavior
+      if (userType == null) {
+        if (kDebugMode)
+          debugPrint(
+            'STATE_VALIDATOR: First-time user detected, initializing...',
+          );
+        await recover();
+        return false;
+      }
+
+      // Check if state is valid
+      if (!await isValid()) {
+        if (kDebugMode)
+          debugPrint('STATE_VALIDATOR: Invalid state detected, recovering...');
+        await recover();
+        return false;
+      }
+
+      return true;
+    } catch (e) {
       if (kDebugMode)
-        debugPrint('STATE_VALIDATOR: Invalid state detected, recovering...');
+        debugPrint('STATE_VALIDATOR: Error during validation: $e');
       await recover();
       return false;
     }
-    return true;
   }
 }

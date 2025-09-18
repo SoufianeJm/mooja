@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'core/themes/theme_exports.dart';
 import 'core/router/app_router.dart';
 import 'core/di/service_locator.dart';
+import 'core/initialization/app_initializer.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -10,6 +11,9 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
 
   await setupServiceLocator();
+
+  // Initialize app state for first-time users
+  await AppInitializer.initializeAppState();
 
   runApp(const MyApp());
 }

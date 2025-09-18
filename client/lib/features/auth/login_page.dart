@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:math' as math;
 import '../../core/themes/theme_exports.dart';
 import '../../core/widgets/buttons/app_button.dart';
+import '../../core/widgets/buttons/app_back_button.dart';
 import '../../core/widgets/inputs/app_input.dart';
 import '../../core/widgets/app_chip.dart';
 import '../../core/router/app_router.dart';
@@ -41,48 +43,50 @@ class _LoginPageState extends State<LoginPage> {
       child: Scaffold(
         resizeToAvoidBottomInset: false,
         body: SafeArea(
-          child: Padding(
-            padding: 32.p,
-            child: Column(
-              children: [
-                // Content section
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      16.v,
-
-                      // Rotated chip
-                      Transform.rotate(
-                        angle: -10 * 3.14159 / 180,
-                        child: AppChip(
-                          label: 'Login',
-                          backgroundColor: AppColors.lemon,
+          child: Column(
+            children: [
+              // ===== Header group =====
+              Padding(
+                padding: 32.ph + 16.pt,
+                child: Row(
+                  children: [
+                    const AppBackButton(),
+                    Expanded(
+                      child: Center(
+                        child: Transform.rotate(
+                          angle: -10 * math.pi / 180,
+                          child: AppChip(
+                            label: 'Login',
+                            backgroundColor: AppColors.lemon,
+                          ),
                         ),
                       ),
+                    ),
+                    const SizedBox(width: 52, height: 52),
+                  ],
+                ),
+              ),
 
+              // ===== Content group =====
+              Expanded(
+                child: Padding(
+                  padding: 32.ph,
+                  child: Column(
+                    children: [
                       16.v,
-
-                      // Title
                       Text(
                         'Welcome back',
                         style: AppTypography.h1SemiBold,
                         textAlign: TextAlign.center,
                       ),
-
                       16.v,
-
-                      // Username input
                       AppInput(
                         label: 'Username',
                         hintText: 'Enter your username',
                         controller: _usernameController,
                         keyboardType: TextInputType.text,
                       ),
-
                       16.v,
-
-                      // Password input
                       AppInput(
                         label: 'Password',
                         hintText: 'Enter your password',
@@ -92,12 +96,14 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                   ),
                 ),
+              ),
 
-                // Bottom buttons
-                BlocListener<AuthBloc, AuthState>(
+              // ===== Bottom group =====
+              Padding(
+                padding: 32.p,
+                child: BlocListener<AuthBloc, AuthState>(
                   listener: (context, state) {
                     if (state is AuthSuccess) {
-                      // Navigate to organization dashboard
                       context.goToOrganizationFeed();
                     } else if (state is AuthFailure) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,7 +117,6 @@ class _LoginPageState extends State<LoginPage> {
                   child: BlocBuilder<AuthBloc, AuthState>(
                     builder: (context, state) {
                       final isLoading = state is AuthLoading;
-
                       return Column(
                         children: [
                           AppButton.primary(
@@ -120,14 +125,12 @@ class _LoginPageState extends State<LoginPage> {
                             isFullWidth: true,
                             isLoading: isLoading,
                           ),
-
                           AppButton.tertiary(
                             text: "Don't have an account? Get Verified",
                             onPressed: isLoading
                                 ? null
                                 : () async {
-                                    // Start org flow at status lookup (full step before country selection)
-                                    context.goToStatusLookup();
+                                    context.pushToStatusLookup();
                                   },
                             isFullWidth: true,
                           ),
@@ -136,8 +139,8 @@ class _LoginPageState extends State<LoginPage> {
                     },
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

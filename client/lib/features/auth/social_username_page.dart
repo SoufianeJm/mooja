@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../../core/themes/theme_exports.dart';
 import '../../core/widgets/buttons/app_button.dart';
+import '../../core/widgets/buttons/app_back_button.dart';
 import '../../core/widgets/inputs/app_input.dart';
 import '../../core/widgets/app_chip.dart';
 import '../../core/services/api_service.dart';
@@ -117,81 +119,109 @@ class _SocialUsernamePageState extends State<SocialUsernamePage> {
     return Scaffold(
       backgroundColor: ThemeColors.backgroundPrimary(context),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            children: [
-              const Spacer(),
-              Center(
-                child: Transform.rotate(
-                  angle: -0.1745,
-                  child: AppChip(
-                    label: 'step 03',
-                    backgroundColor: AppColors.lemon,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                "What is your ${widget.selectedSocialMedia}'s username?",
-                style: AppTypography.h1SemiBold.copyWith(
-                  color: ThemeColors.textPrimary(context),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              AppInput(
-                controller: _usernameController,
-                hintText: _getUsernamePlaceholder(),
-                keyboardType: TextInputType.text,
-                autofocus: true,
-                errorText: _errorText,
-                prefixIcon: Image.asset(
-                  _getSocialMediaIconPath(),
-                  width: 24,
-                  height: 24,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(
-                      Icons.person,
-                      size: 24,
-                      color: ThemeColors.textSecondary(context),
-                    );
-                  },
-                ),
-              ),
-              const Spacer(),
-              Text.rich(
-                TextSpan(
-                  text: 'By tapping Verify, you are agreeing to our ',
-                  style: AppTypography.caption1Medium.copyWith(
-                    color: ThemeColors.textSecondary(context),
-                  ),
-                  children: [
-                    TextSpan(
-                      text: 'Terms of Service',
-                      style: AppTypography.caption1Medium.copyWith(
-                        color: ThemeColors.textPrimary(context),
+        child: Column(
+          children: [
+            // ===== Header group =====
+            Padding(
+              padding: 32.ph + 16.pt,
+              child: Row(
+                children: [
+                  const AppBackButton(),
+                  Expanded(
+                    child: Center(
+                      child: Transform.rotate(
+                        angle: -10 * math.pi / 180,
+                        child: AppChip(
+                          label: 'step 03',
+                          backgroundColor: AppColors.lemon,
+                        ),
                       ),
                     ),
-                    const TextSpan(text: ' and '),
-                    TextSpan(
-                      text: 'Privacy Policy',
-                      style: AppTypography.caption1Medium.copyWith(
+                  ),
+                  const SizedBox(width: 52, height: 52),
+                ],
+              ),
+            ),
+
+            // ===== Content group (vertically centered) =====
+            Expanded(
+              child: Padding(
+                padding: 32.ph,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "What is your ${widget.selectedSocialMedia}'s username?",
+                      style: AppTypography.h1SemiBold.copyWith(
                         color: ThemeColors.textPrimary(context),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    AppInput(
+                      controller: _usernameController,
+                      hintText: _getUsernamePlaceholder(),
+                      keyboardType: TextInputType.text,
+                      autofocus: true,
+                      errorText: _errorText,
+                      prefixIcon: Image.asset(
+                        _getSocialMediaIconPath(),
+                        width: 24,
+                        height: 24,
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(
+                            Icons.person,
+                            size: 24,
+                            color: ThemeColors.textSecondary(context),
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
-              AppButton.primary(
-                text: 'Verify',
-                onPressed: _isLoading ? null : _handleContinue,
-                isLoading: _isLoading,
+            ),
+
+            // ===== Bottom group =====
+            Padding(
+              padding: 32.p,
+              child: Column(
+                children: [
+                  Text.rich(
+                    TextSpan(
+                      text: 'By tapping Verify, you are agreeing to our ',
+                      style: AppTypography.caption1Medium.copyWith(
+                        color: ThemeColors.textSecondary(context),
+                      ),
+                      children: [
+                        TextSpan(
+                          text: 'Terms of Service',
+                          style: AppTypography.caption1Medium.copyWith(
+                            color: ThemeColors.textPrimary(context),
+                          ),
+                        ),
+                        const TextSpan(text: ' and '),
+                        TextSpan(
+                          text: 'Privacy Policy',
+                          style: AppTypography.caption1Medium.copyWith(
+                            color: ThemeColors.textPrimary(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  AppButton.primary(
+                    text: 'Verify',
+                    onPressed: _isLoading ? null : _handleContinue,
+                    isLoading: _isLoading,
+                    isFullWidth: true,
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

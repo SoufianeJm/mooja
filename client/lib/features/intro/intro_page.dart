@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import '../../core/themes/theme_exports.dart';
 import '../../core/widgets/buttons/app_button.dart';
+import '../../core/constants/flow_origin.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/di/service_locator.dart';
@@ -27,42 +27,29 @@ class _IntroPageState extends State<IntroPage> {
   }
 
   Future<void> _maybeRedirect() async {
-    if (kDebugMode) debugPrint('DEBUG: Starting _maybeRedirect');
     final isFirstTime = await _storage.readIsFirstTime();
     final userType = await _storage.readUserType();
     final hasToken = await _storage.hasAuthToken();
-    if (kDebugMode)
-      debugPrint('DEBUG: isFirstTime: $isFirstTime, userType: $userType');
 
-    if (!mounted) {
-      if (kDebugMode) debugPrint('DEBUG: Widget not mounted, returning');
-      return;
-    }
+    if (!mounted) return;
 
     if (!isFirstTime && userType == 'protestor') {
-      if (kDebugMode) debugPrint('DEBUG: Redirecting to home');
       context.goToHome();
       return;
     }
 
     // Bounce logged-in orgs away from intro on cold start
     if (!isFirstTime && userType == 'org' && hasToken) {
-      if (kDebugMode)
-        debugPrint(
-          'DEBUG: Logged-in org detected on intro, redirecting to org feed',
-        );
       context.goToOrganizationFeed();
       return;
     }
 
-    if (kDebugMode) debugPrint('DEBUG: Setting _isCheckingStorage to false');
     setState(() {
       _isCheckingStorage = false;
     });
   }
 
   void _showOrgVerificationModal() {
-    if (kDebugMode) debugPrint('DEBUG: Showing org verification modal');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -70,21 +57,15 @@ class _IntroPageState extends State<IntroPage> {
       builder: (context) => const OrgVerificationModal(),
     ).then((result) {
       if (!mounted) return;
-      if (kDebugMode) debugPrint('DEBUG: Modal result: $result');
       if (result == 'yes') {
-        if (!mounted) return;
-        if (kDebugMode) debugPrint('DEBUG: Navigating to login');
-        context.goToLogin();
+        context.pushToLogin();
       } else if (result == 'no') {
-        if (!mounted) return;
-        if (kDebugMode) debugPrint('DEBUG: Showing not eligible modal');
         _showNotEligibleModal();
       }
     });
   }
 
   void _showNotEligibleModal() {
-    if (kDebugMode) debugPrint('DEBUG: Showing not eligible modal from intro');
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -139,27 +120,14 @@ class _IntroPageState extends State<IntroPage> {
                   children: [
                     AppButton.primary(
                       text: 'Continue as a protestor',
-                      onPressed: () {
-                        if (kDebugMode)
-                          debugPrint('DEBUG: Protestor button pressed');
-                        if (kDebugMode)
-                          debugPrint('DEBUG: Context mounted: $mounted');
-                        if (kDebugMode)
-                          debugPrint(
-                            'DEBUG: goToCountrySelection method exists: ${context.goToCountrySelection}',
-                          );
+                      onPressed: () async {
                         // Navigate to country selection for protestor flow
                         try {
-                          context.goToCountrySelection();
-                          if (kDebugMode)
-                            debugPrint(
-                              'DEBUG: goToCountrySelection called successfully',
-                            );
+                          await context.pushToCountrySelection(
+                            origin: FlowOrigin.intro,
+                          );
                         } catch (e) {
-                          if (kDebugMode)
-                            debugPrint(
-                              'DEBUG: Error calling goToCountrySelection: $e',
-                            );
+                          // no-op
                         }
                       },
                       isFullWidth: true,
@@ -170,10 +138,6 @@ class _IntroPageState extends State<IntroPage> {
                     AppButton.secondary(
                       text: 'Continue as an organization',
                       onPressed: () {
-                        if (kDebugMode)
-                          debugPrint('DEBUG: Organization button pressed');
-                        if (kDebugMode)
-                          debugPrint('DEBUG: Context mounted: $mounted');
                         _showOrgVerificationModal();
                       },
                       isFullWidth: true,

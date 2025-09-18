@@ -78,13 +78,20 @@ class AppTheme {
         ),
       );
 
-  static final _iconButtonTheme = IconButtonThemeData(
-    style: IconButton.styleFrom(
-      fixedSize: const Size(52, 52),
-      padding: 20.ph + 15.pv,
-      shape: RoundedRectangleBorder(borderRadius: AppRadius.xxl.radius),
-    ),
-  );
+  static IconButtonThemeData _iconButtonTheme(bool isDark) =>
+      IconButtonThemeData(
+        style: IconButton.styleFrom(
+          fixedSize: const Size(52, 52),
+          padding: const EdgeInsets.all(15),
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.xxl.radius),
+          backgroundColor: isDark
+              ? DarkThemeColors.backgroundSecondary
+              : LightThemeColors.backgroundSecondary,
+          foregroundColor: isDark
+              ? DarkThemeColors.textPrimary
+              : LightThemeColors.textPrimary,
+        ),
+      );
 
   static InputDecorationTheme _inputDecorationTheme(bool isDark) =>
       InputDecorationTheme(
@@ -156,7 +163,7 @@ class AppTheme {
     elevatedButtonTheme: _elevatedButtonTheme(false),
     filledButtonTheme: _filledButtonTheme(false),
     textButtonTheme: _textButtonTheme(false),
-    iconButtonTheme: _iconButtonTheme,
+    iconButtonTheme: _iconButtonTheme(false),
     inputDecorationTheme: _inputDecorationTheme(false),
     chipTheme: _chipTheme(false),
   );
@@ -170,7 +177,7 @@ class AppTheme {
     elevatedButtonTheme: _elevatedButtonTheme(true),
     filledButtonTheme: _filledButtonTheme(true),
     textButtonTheme: _textButtonTheme(true),
-    iconButtonTheme: _iconButtonTheme,
+    iconButtonTheme: _iconButtonTheme(true),
     inputDecorationTheme: _inputDecorationTheme(true),
     chipTheme: _chipTheme(true),
   );
