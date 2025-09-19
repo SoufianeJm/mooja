@@ -49,24 +49,21 @@ export class EnvironmentVariables {
   @IsEnum(NodeEnvironment)
   NODE_ENV?: NodeEnvironment = NodeEnvironment.DEVELOPMENT;
 
-  // Security
-  @IsOptional()
-  @IsString()
-  ALLOWED_ORIGINS?: string = 'http://localhost:3000';
+  // Security - CORS removed for mobile-only app
 
-  // Rate Limiting
+  // Rate Limiting (Optional - will be disabled if not provided)
   @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
+  @Transform(({ value }) => value ? parseInt(value, 10) : undefined)
   @IsNumber()
   @Min(60000) // Minimum 1 minute
-  RATE_LIMIT_WINDOW_MS?: number = 900000; // 15 minutes
+  RATE_LIMIT_WINDOW_MS?: number;
 
   @IsOptional()
-  @Transform(({ value }) => parseInt(value, 10))
+  @Transform(({ value }) => value ? parseInt(value, 10) : undefined)
   @IsNumber()
   @Min(1)
   @Max(1000)
-  RATE_LIMIT_MAX_REQUESTS?: number = 100;
+  RATE_LIMIT_MAX_REQUESTS?: number;
 }
 
 export function validateEnvironment(config: Record<string, unknown>) {

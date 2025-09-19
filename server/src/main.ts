@@ -26,32 +26,7 @@ async function bootstrap() {
     crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allow cross-origin resource loading
   }));
   
-  // Enable CORS with proper configuration
-  const allowedOrigins = process.env.ALLOWED_ORIGINS 
-    ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
-    : ['http://localhost:3000']; // Default for development
-
-  // More permissive CORS for development
-  const corsOptions = {
-    origin: process.env.NODE_ENV === 'development' 
-      ? (origin: any, callback: any) => {
-          // Allow requests with no origin (like mobile apps, file://, or Postman)
-          if (!origin) return callback(null, true);
-          // Check if origin is in allowed list
-          if (allowedOrigins.includes(origin)) return callback(null, true);
-          // Allow localhost with any port in development
-          if (origin.match(/^https?:\/\/(localhost|127\.0\.0\.1|\[?::1\]?):\d+$/)) {
-            return callback(null, true);
-          }
-          return callback(new Error('Not allowed by CORS'));
-        }
-      : allowedOrigins,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: false, // Changed to false for file:// protocol compatibility
-  };
-
-  app.enableCors(corsOptions);
+  // CORS removed - mobile-only app doesn't need CORS configuration
   
   // Global validation pipe
   app.useGlobalPipes(
@@ -113,7 +88,6 @@ async function bootstrap() {
   await app.listen(port);
   logger.log(`🚀 Application is running on: http://localhost:${port}`);
   logger.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.log(`🔗 CORS Origins: ${process.env.ALLOWED_ORIGINS || 'localhost only'}`);
   logger.log('✅ Mooja API startup complete');
   
   // Graceful shutdown handling

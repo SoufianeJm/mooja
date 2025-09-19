@@ -19,10 +19,8 @@ export const APP_CONSTANTS = {
     RECOMMENDED_JWT_SECRET_LENGTH: 64,
   },
 
-  // Rate Limiting
+  // Rate Limiting (Optional - only used if environment variables are provided)
   RATE_LIMIT: {
-    DEFAULT_WINDOW_MS: 900000, // 15 minutes
-    DEFAULT_MAX_REQUESTS: 100,
     MIN_WINDOW_MS: 60000, // 1 minute
     MAX_REQUESTS_LIMIT: 1000,
   },
@@ -67,7 +65,6 @@ export const APP_CONSTANTS = {
   // Default Values
   DEFAULTS: {
     JWT_EXPIRATION: '30d',
-    ALLOWED_ORIGINS: 'http://localhost:3000',
     NODE_ENV: 'development',
   },
 

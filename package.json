@@ -1,0 +1,19 @@
+{
+  "name": "mooja-app",
+  "version": "1.0.0",
+  "description": "Mooja protest organization app - Backend and Frontend",
+  "private": true,
+  "workspaces": [
+    "server"
+  ],
+  "scripts": {
+    "build": "cd server && npm run build",
+    "start": "cd server && npm run start:prod",
+    "dev": "cd server && npm run start:dev",
+    "install:server": "cd server && npm install",
+    "install:client": "cd client && flutter pub get"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

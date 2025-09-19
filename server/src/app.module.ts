@@ -23,19 +23,22 @@ import { validateEnvironment, validateProductionEnvironment } from './config/env
         return validated;
       },
     }),
-    ThrottlerModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        throttlers: [
-          {
-            name: 'default',
-            ttl: parseInt(configService.get('RATE_LIMIT_WINDOW_MS') || '900000', 10), // 15 minutes
-            limit: parseInt(configService.get('RATE_LIMIT_MAX_REQUESTS') || '100', 10),
-          },
-        ],
-      }),
-      inject: [ConfigService],
-    }),
+    // Conditionally enable rate limiting only if environment variables are provided
+    ...(process.env.RATE_LIMIT_WINDOW_MS && process.env.RATE_LIMIT_MAX_REQUESTS ? [
+      ThrottlerModule.forRootAsync({
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          throttlers: [
+            {
+              name: 'default',
+              ttl: parseInt(configService.get('RATE_LIMIT_WINDOW_MS'), 10),
+              limit: parseInt(configService.get('RATE_LIMIT_MAX_REQUESTS'), 10),
+            },
+          ],
+        }),
+        inject: [ConfigService],
+      })
+    ] : []),
     PrismaModule,
     OrgsModule,
     AuthModule,
@@ -49,10 +52,13 @@ import { validateEnvironment, validateProductionEnvironment } from './config/env
       provide: APP_INTERCEPTOR,
       useClass: RequestContextInterceptor,
     },
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
+    // Conditionally enable ThrottlerGuard only if rate limiting is configured
+    ...(process.env.RATE_LIMIT_WINDOW_MS && process.env.RATE_LIMIT_MAX_REQUESTS ? [
+      {
+        provide: APP_GUARD,
+        useClass: ThrottlerGuard,
+      }
+    ] : []),
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
