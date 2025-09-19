@@ -137,29 +137,17 @@ class ApiService {
     return (data['verificationStatus'] as String?) ?? 'pending';
   }
 
-  /// Register organization account after verification
-  Future<Map<String, dynamic>> register(
-    OrganizationRegistrationData data,
-  ) async {
-    try {
-      final response = await _dio.post(
-        '/auth/org/register',
-        data: {
-          'name': data.name.value,
-          'username': data.username.value,
-          'password': data.password.value,
-          'country': data.country.value,
-          if (data.socialMediaPlatform != null)
-            'socialMediaPlatform': data.socialMediaPlatform!.value,
-          if (data.socialMediaHandle != null)
-            'socialMediaHandle': data.socialMediaHandle!.value,
-          if (data.pictureUrl != null) 'pictureUrl': data.pictureUrl!.value,
-        },
-      );
-      return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
+  /// Register organization by applicationId with credentials only
+  Future<Map<String, dynamic>> registerWithApplicationId({
+    required ApplicationId applicationId,
+    required Username username,
+    required Password password,
+  }) async {
+    return _makeRequest<Map<String, dynamic>>(
+      'POST',
+      '/auth/org/register/by-application/${applicationId.value}',
+      data: {'username': username.value, 'password': password.value},
+    );
   }
 
   /// Handle Dio errors and convert to ApiError
@@ -270,27 +258,6 @@ class ApiService {
       throw _handleError(e);
     }
   }
-}
-
-/// Organization registration data
-class OrganizationRegistrationData {
-  final OrganizationName name;
-  final Username username;
-  final Password password;
-  final Country country;
-  final SocialMediaPlatform? socialMediaPlatform;
-  final SocialMediaHandle? socialMediaHandle;
-  final PictureUrl? pictureUrl;
-
-  const OrganizationRegistrationData({
-    required this.name,
-    required this.username,
-    required this.password,
-    required this.country,
-    this.socialMediaPlatform,
-    this.socialMediaHandle,
-    this.pictureUrl,
-  });
 }
 
 /// API Error class

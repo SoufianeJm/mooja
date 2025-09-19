@@ -97,6 +97,65 @@ export class AuthService {
     });
   }
 
+  async orgRegisterByApplicationId(applicationId: string, username: string, password: string) {
+    if (!applicationId || !username || !password) {
+      throw new BadRequestException('applicationId, username and password are required');
+    }
+
+    // Get the pending/approved org by application id
+    const org = await this.prisma.org.findUnique({ where: { id: applicationId } });
+    if (!org) {
+      throw new BadRequestException('Application not found');
+    }
+
+    // Ensure invite code was validated in the prior step
+    if (!org.inviteCodeUsed) {
+      // Allow pending flow too: set password and keep status (optional), but safer to require approved
+      // For now require an invite code validated to avoid abuse
+      throw new BadRequestException('Application not approved or invite code not validated');
+    }
+
+    // Ensure username availability (case insensitive)
+    const existingWithUsername = await this.orgsService.findByUsername(username);
+    if (existingWithUsername && existingWithUsername.id !== org.id) {
+      throw new BadRequestException('Username already taken');
+    }
+
+    const hashedPassword = await HashUtil.hash(password);
+
+    // Complete registration and verification in a transaction
+    const [updatedOrg] = await this.prisma.$transaction([
+      this.prisma.org.update({
+        where: { id: applicationId },
+        data: {
+          username,
+          password: hashedPassword,
+          verificationStatus: 'verified',
+          verifiedAt: new Date(),
+        },
+      }),
+      // Mark invite code as used (idempotent if already used)
+      this.prisma.inviteCode.updateMany({
+        where: { code: org.inviteCodeUsed!, isUsed: false },
+        data: { isUsed: true },
+      }),
+    ]);
+
+    // Generate JWT tokens
+    const tokens = this.generateTokens({ id: updatedOrg.id, username: updatedOrg.username });
+
+    const { password: _, ...publicOrgData } = updatedOrg as any;
+
+    const response = {
+      org: publicOrgData,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      message: 'Organization registered and verified successfully',
+    };
+
+    return plainToInstance(AuthResponseDto, response, { excludeExtraneousValues: true });
+  }
+
   async orgLogin(orgLoginDto: OrgLoginDto) {
     const org = await this.orgsService.findByUsername(orgLoginDto.username);
     

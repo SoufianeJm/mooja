@@ -83,10 +83,9 @@ class _OrgRegistrationPageState extends State<OrgRegistrationPage> {
       // Get stored org data
       final orgName = await storage.readPendingOrgName();
       final country = await storage.readSelectedCountryCode();
-      final socialPlatform = await storage.readPendingSocialPlatform();
-      final socialHandle = await storage.readPendingSocialHandle();
+      final applicationId = await storage.readPendingApplicationId();
 
-      if (orgName == null || country == null) {
+      if (orgName == null || country == null || applicationId == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -99,25 +98,11 @@ class _OrgRegistrationPageState extends State<OrgRegistrationPage> {
         return;
       }
 
-      // Register the organization account
-      final response = await apiService.register(
-        OrganizationRegistrationData(
-          name: OrganizationName(orgName),
-          username: Username(username),
-          password: Password(password),
-          country: Country(country),
-          socialMediaPlatform: socialPlatform != null
-              ? SocialMediaPlatform(
-                  (socialPlatform.toLowerCase() == 'x'
-                          ? 'twitter'
-                          : socialPlatform)
-                      .toLowerCase(),
-                )
-              : null,
-          socialMediaHandle: socialHandle != null
-              ? SocialMediaHandle(socialHandle)
-              : null,
-        ),
+      // Register the organization account by application id
+      final response = await apiService.registerWithApplicationId(
+        applicationId: ApplicationId(applicationId),
+        username: Username(username),
+        password: Password(password),
       );
 
       if (!mounted) return;

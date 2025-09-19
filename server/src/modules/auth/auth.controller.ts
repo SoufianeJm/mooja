@@ -1,5 +1,5 @@
-import { Controller, Post, Body, UseGuards, Get, UnauthorizedException } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Post, Body, UseGuards, Get, UnauthorizedException, Param } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { OrgLoginDto } from './dto/org-login.dto';
@@ -15,15 +15,13 @@ import { OrgUser } from '../../common/interfaces/user.interface';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public()
-  @Throttle({ default: { limit: 5, ttl: 900000 } }) // 5 attempts per 15 minutes
-  @Post('org/register')
-  @ApiOperation({ summary: 'Register a new organization' })
-  @ApiResponse({ status: 201, description: 'Registration successful, returns JWT token' })
-  @ApiResponse({ status: 409, description: 'Username already exists' })
-  @ApiResponse({ status: 429, description: 'Too many registration attempts' })
-  async orgRegister(@Body() registerOrgDto: RegisterOrgDto) {
-    return this.authService.orgRegister(registerOrgDto);
+  @Post('org/register/by-application/:applicationId')
+  async orgRegisterByApplication(
+    @Param('applicationId') applicationId: string,
+    @Body() body: any,
+  ) {
+    const { username, password } = body || {};
+    return this.authService.orgRegisterByApplicationId(applicationId, username, password);
   }
 
   @Public()

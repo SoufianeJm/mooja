@@ -14,14 +14,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 export class OrgsController {
   constructor(private readonly orgsService: OrgsService) {}
 
-  @Public()
-  @Post('register')
-  @ApiOperation({ summary: 'Register a new organization' })
-  @ApiResponse({ status: 201, description: 'Organization registered successfully' })
-  @ApiResponse({ status: 409, description: 'Organization username already exists' })
-  async register(@Body() registerOrgDto: RegisterOrgDto) {
-    return this.orgsService.register(registerOrgDto);
-  }
+  // Registration by applicationId is handled in AuthController now. Removing legacy /orgs/register endpoint.
 
   @Public()
   @Post('verify-code')
