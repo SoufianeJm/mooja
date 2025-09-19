@@ -214,43 +214,66 @@ class ApiService {
 
   /// Handle Dio errors and convert to ApiError
   ApiError _handleError(DioException e) {
-    switch (e.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        return ApiError(
-          'Connection timeout. Please check your internet connection.',
-          408,
-        );
-      case DioExceptionType.connectionError:
-        return ApiError(
-          'No internet connection. Please check your network.',
-          0,
-        );
-      case DioExceptionType.badResponse:
-        final statusCode = e.response?.statusCode ?? 500;
-        final data = e.response?.data;
-        String message = 'Server error occurred';
-
-        if (data != null) {
-          if (data is Map) {
-            // Handle validation errors
-            if (data['message'] is List) {
-              message = (data['message'] as List).join(', ');
-            } else if (data['message'] != null) {
-              message = data['message'].toString();
-            }
-          } else if (data is String) {
-            message = data;
-          }
-        }
-
-        return ApiError(message, statusCode);
-      case DioExceptionType.cancel:
-        return ApiError('Request was cancelled', 499);
-      default:
-        return ApiError('An unexpected error occurred', 500);
+    // Handle special case that needs response data
+    if (e.type == DioExceptionType.badResponse) {
+      return _createBadResponseError(e);
     }
+
+    // Use lookup table for simple error types
+    final errorHandler = _errorHandlers[e.type];
+    return errorHandler?.call() ?? _createUnexpectedError();
+  }
+
+  /// Error handler lookup table
+  static final Map<DioExceptionType, ApiError Function()> _errorHandlers = {
+    DioExceptionType.connectionTimeout: () => ApiError(
+      'Connection timeout. Please check your internet connection.',
+      408,
+    ),
+    DioExceptionType.sendTimeout: () => ApiError(
+      'Connection timeout. Please check your internet connection.',
+      408,
+    ),
+    DioExceptionType.receiveTimeout: () => ApiError(
+      'Connection timeout. Please check your internet connection.',
+      408,
+    ),
+    DioExceptionType.connectionError: () =>
+        ApiError('No internet connection. Please check your network.', 0),
+    DioExceptionType.cancel: () => ApiError('Request was cancelled', 499),
+  };
+
+  /// Create bad response error with message extraction
+  ApiError _createBadResponseError(DioException e) {
+    final statusCode = e.response?.statusCode ?? 500;
+    final message = _extractErrorMessage(e.response?.data);
+    return ApiError(message, statusCode);
+  }
+
+  /// Extract error message from response data
+  String _extractErrorMessage(dynamic data) {
+    if (data == null) return 'Server error occurred';
+
+    if (data is Map) {
+      final message = data['message'];
+      if (message is List) {
+        return message.join(', ');
+      }
+      if (message != null) {
+        return message.toString();
+      }
+    }
+
+    if (data is String) {
+      return data;
+    }
+
+    return 'Server error occurred';
+  }
+
+  /// Create unexpected error
+  ApiError _createUnexpectedError() {
+    return ApiError('An unexpected error occurred', 500);
   }
 }
 
