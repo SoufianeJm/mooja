@@ -11,6 +11,7 @@ import '../../core/constants/flow_origin.dart';
 import '../../core/router/app_router.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/di/service_locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'verification_cubit.dart';
 
 class CountrySelectionPage extends StatefulWidget {
@@ -280,7 +281,7 @@ class _CountrySelectionPageState extends State<CountrySelectionPage> {
                         _selectedCountry!.code,
                       );
                       // Update cubit state (org + protestor flows share this)
-                      await sl<VerificationCubit>().setCountry(
+                      await context.read<VerificationCubit>().setCountry(
                         _selectedCountry!.code,
                       );
 

@@ -159,8 +159,7 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
         _isLoading = false;
       });
 
-      // Log the error for debugging but don't show technical details to user
-      debugPrint('Code verification error: $e');
+      // Swallow technical details; show user-friendly error above
     }
   }
 

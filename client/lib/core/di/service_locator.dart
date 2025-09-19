@@ -16,11 +16,15 @@ Future<void> setupServiceLocator() async {
   // Register services as singletons (stateful services)
   sl.registerLazySingleton<StorageService>(() => StorageService());
   sl.registerLazySingleton<ApiService>(() => ApiService());
-  sl.registerLazySingleton<AuthService>(() => AuthService(sl<ApiService>()));
+  sl.registerLazySingleton<AuthService>(
+    () => AuthService(sl<ApiService>(), sl<StorageService>()),
+  );
   sl.registerLazySingleton<UserContextService>(
     () => UserContextService(sl<StorageService>(), sl<AuthService>()),
   );
-  sl.registerLazySingleton<VerificationCubit>(
+  // Scope VerificationCubit per usage rather than as a singleton
+  // Provide via BlocProvider at the flow/screen level
+  sl.registerFactory<VerificationCubit>(
     () => VerificationCubit(sl<ApiService>(), sl<StorageService>()),
   );
 
@@ -29,8 +33,6 @@ Future<void> setupServiceLocator() async {
     () => ProtestsBloc(apiService: sl<ApiService>()),
   );
   sl.registerFactory<AuthBloc>(() => AuthBloc(authService: sl<AuthService>()));
-
-  // TODO: Add more services and BLoCs as you build them
 }
 
 /// Reset all dependencies (useful for testing)

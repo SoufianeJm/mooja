@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../di/service_locator.dart';
@@ -18,6 +17,7 @@ import '../../features/auth/status_lookup_page.dart';
 import '../../features/auth/code_verification_page.dart';
 import '../../features/auth/org_registration_page.dart';
 import '../../features/auth/bloc/auth_bloc.dart';
+import '../../features/auth/verification_cubit.dart';
 import '../../features/home/widgets/feed_shell.dart';
 import '../../features/home/protestor_feed_page.dart';
 import '../../features/home/organization_feed_page.dart';
@@ -46,13 +46,6 @@ abstract class AppRoutes {
   static const protestorFeed = '/home/protestor';
   static const organizationFeed = '/home/organization';
   static const placeholder = '/placeholder';
-
-  // TODO: Add more routes as you build them
-  // Example: static const profile = '/profile';
-  // Example: static const protestDetails = '/protest/:id';
-
-  // TODO: Add helper methods for dynamic routes
-  // Example: static String protest(String id) => '/protest/$id';
 }
 
 // Main router configuration
@@ -60,19 +53,12 @@ class AppRouter {
   // Private constructor to prevent instantiation
   AppRouter._();
 
-  // TODO: Connect this to AuthBloc when implemented
-  // For now, keeping auth state simple
-  // static bool _isAuthenticated = false;
-  // static void setAuthState(bool isAuthenticated) {
-  //   _isAuthenticated = isAuthenticated;
-  // }
-
   static final RouteObserver<ModalRoute<void>> routeObserver =
       RouteObserver<ModalRoute<void>>();
 
   static final GoRouter router = GoRouter(
     initialLocation: AppRoutes.intro,
-    debugLogDiagnostics: kDebugMode, // Only log diagnostics in debug mode
+    debugLogDiagnostics: false,
     observers: [routeObserver],
     routes: <RouteBase>[
       // Public routes (no auth required)
@@ -101,10 +87,13 @@ class AppRouter {
           final isOrgFlow = state.uri.queryParameters['orgFlow'] == '1';
           final stepLabel = state.uri.queryParameters['stepLabel'];
           final origin = state.extra as FlowOrigin? ?? FlowOrigin.unknown;
-          return CountrySelectionPage(
-            forOrganizationFlow: isOrgFlow,
-            stepLabel: stepLabel,
-            origin: origin,
+          return BlocProvider(
+            create: (_) => sl<VerificationCubit>(),
+            child: CountrySelectionPage(
+              forOrganizationFlow: isOrgFlow,
+              stepLabel: stepLabel,
+              origin: origin,
+            ),
           );
         },
       ),
@@ -112,13 +101,19 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.organizationName,
         name: 'organizationName',
-        builder: (context, state) => const OrganizationNamePage(),
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<VerificationCubit>(),
+          child: const OrganizationNamePage(),
+        ),
       ),
 
       GoRoute(
         path: AppRoutes.socialMediaSelection,
         name: 'socialMediaSelection',
-        builder: (context, state) => const SocialMediaSelectionPage(),
+        builder: (context, state) => BlocProvider(
+          create: (_) => sl<VerificationCubit>(),
+          child: const SocialMediaSelectionPage(),
+        ),
       ),
 
       GoRoute(
@@ -127,7 +122,10 @@ class AppRouter {
         builder: (context, state) {
           final socialMedia =
               state.uri.queryParameters['socialMedia'] ?? 'Instagram';
-          return SocialUsernamePage(selectedSocialMedia: socialMedia);
+          return BlocProvider(
+            create: (_) => sl<VerificationCubit>(),
+            child: SocialUsernamePage(selectedSocialMedia: socialMedia),
+          );
         },
       ),
 
@@ -176,60 +174,35 @@ class AppRouter {
                 ? TabType.forYou
                 : TabType.forOrganizations,
             onTabChanged: (newTab) async {
-              if (kDebugMode) debugPrint('DEBUG: Tab changed to: $newTab');
-
               // Validate state before tab changes
               if (!await StateValidator.validateBeforeNavigation()) {
-                if (kDebugMode)
-                  debugPrint(
-                    'DEBUG: State validation failed during tab change',
-                  );
                 return;
               }
 
               // Handle tab changes using UserContextService
               if (newTab == TabType.forYou) {
-                if (kDebugMode) debugPrint('DEBUG: Switching to For You tab');
                 // Always allow switching to For You tab
                 navigationShell.goBranch(0);
               } else if (newTab == TabType.forOrganizations) {
-                if (kDebugMode)
-                  debugPrint('DEBUG: Switching to For Organizations tab');
-
                 // Use UserContextService to determine org access
                 final userContext = sl<UserContextService>();
                 final canAccess = await userContext.canAccessOrgFeatures();
-                if (kDebugMode)
-                  debugPrint('DEBUG: Can access org features: $canAccess');
 
                 if (canAccess) {
-                  if (kDebugMode)
-                    debugPrint(
-                      'DEBUG: User can access org features, switching to org tab',
-                    );
                   // User is verified org, allow access
                   navigationShell.goBranch(1);
                 } else {
                   // Determine where to send them based on journey
                   final journey = await userContext.getCurrentJourney();
-                  if (kDebugMode) debugPrint('DEBUG: User journey: $journey');
                   if (context.mounted) {
                     switch (journey) {
                       case UserJourney.orgPending:
-                        if (kDebugMode)
-                          debugPrint(
-                            'DEBUG: User has pending org application, going to verification timeline',
-                          );
                         // Has applied before - go to verification timeline
                         context.go('/verification-timeline');
                         break;
                       case UserJourney.firstTime:
                       case UserJourney.protestorActive:
                       default:
-                        if (kDebugMode)
-                          debugPrint(
-                            'DEBUG: User is protestor, showing eligibility modal from feed',
-                          );
                         // Show eligibility modal directly (not intro page)
                         _showOrgVerificationModalFromFeed(context);
                         break;
@@ -268,37 +241,11 @@ class AppRouter {
         name: 'placeholder',
         builder: (context, state) => const PlaceholderScreen(),
       ),
-
-      // TODO: Add more routes as you build screens
-
-      // Example for protected home route with nested routes:
-      // GoRoute(
-      //   path: '/',
-      //   name: 'home',
-      //   builder: (context, state) => const HomePage(),
-      //   routes: [
-      //     GoRoute(
-      //       path: 'profile',
-      //       builder: (context, state) => const ProfilePage(),
-      //     ),
-      //   ],
-      // ),
-
-      // Example for dynamic route with parameters:
-      // GoRoute(
-      //   path: '/protest/:id',
-      //   builder: (context, state) {
-      //     final id = state.pathParameters['id']!;
-      //     return ProtestDetailsPage(protestId: id);
-      //   },
-      // ),
     ],
 
     redirect: (BuildContext context, GoRouterState state) async {
       // Validate state before any navigation
       if (!await StateValidator.validateBeforeNavigation()) {
-        if (kDebugMode)
-          debugPrint('DEBUG: State validation failed, using safe route');
         return await NavigationGuard.getSafeRoute();
       }
 
@@ -306,33 +253,17 @@ class AppRouter {
       final isFirstTime = await storage.readIsFirstTime();
       final userType = await storage.readUserType();
 
-      if (kDebugMode) {
-        debugPrint(
-          'DEBUG: Router redirect - isFirstTime: $isFirstTime, userType: $userType, location: ${state.matchedLocation}',
-        );
-      }
-
       // Check if navigation is valid (only if actually navigating somewhere)
       if (state.uri.toString() != state.matchedLocation) {
-        if (kDebugMode) {
-          debugPrint(
-            'DEBUG: Checking navigation from "${state.uri.toString()}" to "${state.matchedLocation}"',
-          );
-        }
         final canNavigate = await NavigationGuard.canNavigate(
           state.uri.toString(),
           state.matchedLocation,
         );
 
         if (!canNavigate) {
-          if (kDebugMode)
-            debugPrint('DEBUG: Navigation blocked by guard, using safe route');
           return await NavigationGuard.getSafeRoute();
         }
-      } else {
-        if (kDebugMode)
-          debugPrint('DEBUG: No navigation needed, already on correct route');
-      }
+      } else {}
 
       // For first-time users, allow them to go through their respective flows
       if (isFirstTime) {
@@ -363,10 +294,6 @@ class AppRouter {
         // Only redirect if trying to access protected routes (like feed pages)
         if (!allowedFirstTimeRoutes.contains(state.matchedLocation) &&
             !(hasPending && isFeed)) {
-          if (kDebugMode)
-            debugPrint(
-              'DEBUG: First-time user trying to access protected route, redirecting to intro',
-            );
           return AppRoutes.intro;
         }
       } else {
@@ -374,27 +301,17 @@ class AppRouter {
         if (userType == 'protestor') {
           // Returning protestors should go to feed, not intro
           if (state.matchedLocation == AppRoutes.intro) {
-            if (kDebugMode)
-              debugPrint(
-                'DEBUG: Returning protestor on intro, redirecting to feed',
-              );
             return AppRoutes.protestorFeed;
           }
         } else if (userType == 'org') {
           // Returning orgs with token should not see intro on cold start
           final hasToken = await sl<StorageService>().hasAuthToken();
           if (hasToken && state.matchedLocation == AppRoutes.intro) {
-            if (kDebugMode)
-              debugPrint(
-                'DEBUG: Returning org on intro with token, redirecting to org feed',
-              );
             return AppRoutes.organizationFeed;
           }
         }
         // For orgs without token, let the tab navigation handle the routing logic
       }
-
-      if (kDebugMode) debugPrint('DEBUG: Router redirect - no redirect needed');
       return null;
     },
 
@@ -431,14 +348,9 @@ class AppRouter {
 
 // Helper function to show org verification modal from feed context
 void _showOrgVerificationModalFromFeed(BuildContext context) {
-  if (kDebugMode)
-    debugPrint('DEBUG: Showing org verification modal from feed context');
-
   // Validate state before showing modal
   StateValidator.validateBeforeNavigation().then((isValid) {
     if (!isValid) {
-      if (kDebugMode)
-        debugPrint('DEBUG: State validation failed, not showing modal');
       return;
     }
 
@@ -449,16 +361,11 @@ void _showOrgVerificationModalFromFeed(BuildContext context) {
       builder: (context) => const OrgVerificationModal(),
     ).then((result) {
       if (!context.mounted) return;
-      if (kDebugMode) debugPrint('DEBUG: Modal result from feed: $result');
       if (result == 'yes') {
         if (!context.mounted) return;
-        if (kDebugMode)
-          debugPrint('DEBUG: Navigating to login from feed modal');
         context.pushToLogin();
       } else if (result == 'no') {
         if (!context.mounted) return;
-        if (kDebugMode)
-          debugPrint('DEBUG: Showing not eligible modal from feed');
         _showNotEligibleModalFromFeed(context);
       }
     });
@@ -467,8 +374,6 @@ void _showOrgVerificationModalFromFeed(BuildContext context) {
 
 // Helper function to show not eligible modal from feed context
 void _showNotEligibleModalFromFeed(BuildContext context) {
-  if (kDebugMode)
-    debugPrint('DEBUG: Showing not eligible modal from feed context');
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -523,9 +428,6 @@ extension NavigationExtensions on BuildContext {
   void goToProtestorFeed() => go(AppRoutes.protestorFeed);
   void goToOrganizationFeed() => go(AppRoutes.organizationFeed);
   void goToPlaceholder() => go(AppRoutes.placeholder);
-
-  // TODO: Add more navigation methods as you create screens
-  // Example: void goToProtest(String id) => go('/protest/$id');
 
   // Check current route
   bool get isLoginPage =>

@@ -98,8 +98,6 @@ class _SignupPageState extends State<SignupPage> {
                   AppButton.primary(
                     text: 'Continue',
                     onPressed: () {
-                      // TODO: Validate form fields before navigation
-                      // For now, navigate to country selection
                       context.goToCountrySelection();
                     },
                     isFullWidth: true,

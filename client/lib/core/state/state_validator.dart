@@ -1,6 +1,5 @@
 import '../services/storage_service.dart';
 import '../di/service_locator.dart';
-import 'package:flutter/foundation.dart';
 
 /// Validates and recovers from corrupted or inconsistent app state
 class StateValidator {
@@ -20,16 +19,12 @@ class StateValidator {
 
       return true;
     } catch (e) {
-      if (kDebugMode) debugPrint('STATE_VALIDATOR: Error validating state: $e');
       return false;
     }
   }
 
   /// Recover from corrupted state by resetting to safe defaults
   static Future<void> recover() async {
-    if (kDebugMode)
-      debugPrint('STATE_VALIDATOR: Recovering from corrupted state');
-
     try {
       // Reset to safe protestor state
       await _storage.saveUserType('protestor');
@@ -37,11 +32,7 @@ class StateValidator {
 
       // Clear any corrupted org data
       await _storage.clearPendingOrgData();
-
-      if (kDebugMode)
-        debugPrint('STATE_VALIDATOR: State recovered successfully');
     } catch (e) {
-      if (kDebugMode) debugPrint('STATE_VALIDATOR: Error during recovery: $e');
       // If recovery fails, clear everything
       await _storage.clear();
       await _storage.saveUserType('protestor');
@@ -73,26 +64,18 @@ class StateValidator {
       // If userType is null, this is likely a first-time user before proper initialization
       // Don't show warning as this is expected behavior
       if (userType == null) {
-        if (kDebugMode)
-          debugPrint(
-            'STATE_VALIDATOR: First-time user detected, initializing...',
-          );
         await recover();
         return false;
       }
 
       // Check if state is valid
       if (!await isValid()) {
-        if (kDebugMode)
-          debugPrint('STATE_VALIDATOR: Invalid state detected, recovering...');
         await recover();
         return false;
       }
 
       return true;
     } catch (e) {
-      if (kDebugMode)
-        debugPrint('STATE_VALIDATOR: Error during validation: $e');
       await recover();
       return false;
     }

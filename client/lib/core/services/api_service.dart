@@ -37,13 +37,10 @@ class ApiService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          // TODO(api, 2024-12-14): Add auth token when auth is implemented
           handler.next(options);
         },
         onError: (error, handler) {
-          if (error.response?.statusCode == 401) {
-            // TODO(api, 2024-12-14): Clear token when auth is implemented
-          }
+          if (error.response?.statusCode == 401) {}
           handler.next(error);
         },
       ),
@@ -120,10 +117,7 @@ class ApiService {
     try {
       final response = await _dio.post(
         '/orgs/verify-code',
-        data: {
-          'applicationId': applicationId,
-          'inviteCode': inviteCode,
-        },
+        data: {'applicationId': applicationId, 'inviteCode': inviteCode},
       );
       return response.data as Map<String, dynamic>;
     } on DioException catch (e) {
@@ -177,7 +171,7 @@ class ApiService {
   /// Register organization account after verification
   Future<Map<String, dynamic>> register({
     required String name,
-    required String username, 
+    required String username,
     required String password,
     required String country,
     String? socialMediaPlatform,
@@ -192,7 +186,8 @@ class ApiService {
           'username': username,
           'password': password,
           'country': country,
-          if (socialMediaPlatform != null) 'socialMediaPlatform': socialMediaPlatform,
+          if (socialMediaPlatform != null)
+            'socialMediaPlatform': socialMediaPlatform,
           if (socialMediaHandle != null) 'socialMediaHandle': socialMediaHandle,
           if (pictureUrl != null) 'pictureUrl': pictureUrl,
         },
@@ -236,7 +231,7 @@ class ApiService {
         final statusCode = e.response?.statusCode ?? 500;
         final data = e.response?.data;
         String message = 'Server error occurred';
-        
+
         if (data != null) {
           if (data is Map) {
             // Handle validation errors
@@ -249,7 +244,7 @@ class ApiService {
             message = data;
           }
         }
-        
+
         return ApiError(message, statusCode);
       case DioExceptionType.cancel:
         return ApiError('Request was cancelled', 499);

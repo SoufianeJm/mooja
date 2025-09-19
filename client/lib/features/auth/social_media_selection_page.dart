@@ -7,6 +7,7 @@ import '../../core/router/app_router.dart';
 import '../../core/widgets/inputs/app_dropdown.dart';
 import '../../core/widgets/app_chip.dart';
 import '../../core/di/service_locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/services/storage_service.dart';
 import 'verification_cubit.dart';
 
@@ -68,7 +69,9 @@ class _SocialMediaSelectionPageState extends State<SocialMediaSelectionPage> {
     final storage = sl<StorageService>();
     storage.savePendingSocialPlatform(_selectedSocialMedia!).whenComplete(
       () async {
-        await sl<VerificationCubit>().setPlatform(_selectedSocialMedia!);
+        await context.read<VerificationCubit>().setPlatform(
+          _selectedSocialMedia!,
+        );
         if (!mounted) return;
         context.pushToSocialUsername(_selectedSocialMedia!);
       },

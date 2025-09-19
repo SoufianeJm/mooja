@@ -6,7 +6,7 @@ class AuthService {
   final ApiService _apiService;
   final StorageService _storageService;
 
-  AuthService(this._apiService) : _storageService = StorageService();
+  AuthService(this._apiService, this._storageService);
 
   /// Login with username and password (with retry logic)
   Future<AuthResult> login({
@@ -26,7 +26,9 @@ class AuthService {
           try {
             await _storageService.saveAuthToken(response.data['accessToken']);
             if (response.data['refreshToken'] != null) {
-              await _storageService.saveRefreshToken(response.data['refreshToken']);
+              await _storageService.saveRefreshToken(
+                response.data['refreshToken'],
+              );
             }
             await _storageService.saveUserType('org');
             await _storageService.saveIsFirstTime(false);
@@ -54,12 +56,13 @@ class AuthService {
           await Future.delayed(Duration(milliseconds: 500 * (attempt + 1)));
           continue;
         }
-        
+
         // Final attempt or non-retryable error
         if (e.type == DioExceptionType.connectionTimeout ||
             e.type == DioExceptionType.receiveTimeout) {
           return AuthResult.failure(
-            message: 'Connection timeout. Please check your internet connection.',
+            message:
+                'Connection timeout. Please check your internet connection.',
           );
         } else if (e.type == DioExceptionType.connectionError) {
           return AuthResult.failure(
@@ -94,18 +97,16 @@ class AuthService {
         );
       }
     }
-    
-    return AuthResult.failure(
-      message: 'Login failed after multiple attempts.',
-    );
+
+    return AuthResult.failure(message: 'Login failed after multiple attempts.');
   }
-  
+
   /// Determine if an error should trigger a retry
   bool _shouldRetry(DioException e) {
     return e.type == DioExceptionType.connectionTimeout ||
-           e.type == DioExceptionType.receiveTimeout ||
-           e.type == DioExceptionType.connectionError ||
-           (e.response?.statusCode != null && e.response!.statusCode! >= 500);
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.connectionError ||
+        (e.response?.statusCode != null && e.response!.statusCode! >= 500);
   }
 
   /// Check if user is already logged in

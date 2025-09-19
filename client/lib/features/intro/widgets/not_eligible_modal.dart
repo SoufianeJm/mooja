@@ -49,10 +49,6 @@ class NotEligibleModal extends StatelessWidget {
           AppButton.primary(
             text: fromFeed ? 'Go back to Feed' : 'Go back to Intro screen',
             onPressed: () {
-              if (kDebugMode)
-                debugPrint(
-                  'DEBUG: Not eligible modal - Go back button pressed (fromFeed: $fromFeed)',
-                );
               Navigator.of(context).pop();
             },
             isFullWidth: true,

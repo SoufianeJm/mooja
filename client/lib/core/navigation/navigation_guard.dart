@@ -1,6 +1,5 @@
 import '../services/storage_service.dart';
 import '../di/service_locator.dart';
-import 'package:flutter/foundation.dart';
 
 /// Prevents invalid navigation combinations that could cause loops or unexpected behavior
 class NavigationGuard {
@@ -8,31 +7,21 @@ class NavigationGuard {
 
   /// Check if navigation from one route to another is valid
   static Future<bool> canNavigate(String from, String to) async {
-    if (kDebugMode)
-      debugPrint('NAV_GUARD: Checking navigation from "$from" to "$to"');
-
     // Prevent redirect loops
     if (from == to) {
-      if (kDebugMode)
-        debugPrint('NAV_GUARD: Blocked - redirect loop (from == to)');
       return false;
     }
 
     // Prevent problematic navigation patterns
     if (from == '/home/protestor' && to == '/intro') {
-      if (kDebugMode)
-        debugPrint('NAV_GUARD: Blocked - protestor trying to go to intro');
       return false;
     }
     if (from == '/home/organization' && to == '/intro') {
-      if (kDebugMode)
-        debugPrint('NAV_GUARD: Blocked - org trying to go to intro');
       return false;
     }
 
     // Check first-time user restrictions
     final isFirstTime = await _storage.readIsFirstTime();
-    if (kDebugMode) debugPrint('NAV_GUARD: isFirstTime = $isFirstTime');
 
     if (isFirstTime == true) {
       // First-time users should only go to onboarding routes
@@ -50,33 +39,17 @@ class NavigationGuard {
         '/signup',
       ];
 
-      if (kDebugMode) {
-        debugPrint(
-          'NAV_GUARD: Checking if "$to" is in allowed routes: ${allowedFirstTimeRoutes.contains(to)}',
-        );
-      }
-
       if (!allowedFirstTimeRoutes.contains(to)) {
-        if (kDebugMode)
-          debugPrint(
-            'NAV_GUARD: Blocked - first-time user trying to access restricted route',
-          );
         return false;
       }
     }
 
     // Check user type restrictions
     final userType = await _storage.readUserType();
-    if (kDebugMode) debugPrint('NAV_GUARD: userType = $userType');
 
     if (userType == 'protestor' && to == '/intro') {
-      if (kDebugMode)
-        debugPrint(
-          'NAV_GUARD: Blocked - returning protestor trying to go to intro',
-        );
       return false;
     }
-    if (kDebugMode) debugPrint('NAV_GUARD: Navigation allowed');
     return true;
   }
 
@@ -98,6 +71,6 @@ class NavigationGuard {
 
   /// Log navigation for debugging
   static void logNavigation(String from, String to, String reason) {
-    if (kDebugMode) debugPrint('NAV_GUARD: $from → $to ($reason)');
+    // no-op in production
   }
 }

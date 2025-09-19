@@ -7,7 +7,7 @@ import '../../core/widgets/inputs/app_input.dart';
 import '../../core/widgets/app_chip.dart';
 import '../../core/services/api_service.dart';
 import 'verification_cubit.dart';
-import '../../core/di/service_locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/router/app_router.dart';
 
 class SocialUsernamePage extends StatefulWidget {
@@ -65,8 +65,8 @@ class _SocialUsernamePageState extends State<SocialUsernamePage> {
     });
 
     try {
-      // Use cubit from service locator to persist handle and submit
-      final vc = sl<VerificationCubit>();
+      // Use cubit from BlocProvider to persist handle and submit
+      final vc = context.read<VerificationCubit>();
       vc.setHandle(username);
       await vc.submit();
 

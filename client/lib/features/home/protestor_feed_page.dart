@@ -242,7 +242,6 @@ class _ProtestorFeedPageState extends State<ProtestorFeedPage> {
                   return EmptyStateWidget(
                     selectedCountry: _selectedCountry ?? kCountries.first,
                     onSuggestionSubmitted: () {
-                      // TODO: Handle suggestion submission
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Suggestion submitted! Thank you.'),
@@ -322,7 +321,6 @@ class _ProtestorFeedPageState extends State<ProtestorFeedPage> {
                               child: ProtestCard(
                                 protest: protests[i],
                                 onTap: () {
-                                  // TODO(protestor, 2024-12-14): Navigate to protest details when implemented
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
@@ -332,7 +330,6 @@ class _ProtestorFeedPageState extends State<ProtestorFeedPage> {
                                   );
                                 },
                                 onMoreTap: () {
-                                  // TODO(protestor, 2024-12-14): Show protest options menu when implemented
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(

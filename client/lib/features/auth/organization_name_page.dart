@@ -7,6 +7,7 @@ import '../../core/widgets/inputs/app_input.dart';
 import '../../core/widgets/app_chip.dart';
 import '../../core/router/app_router.dart';
 import '../../core/di/service_locator.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/services/storage_service.dart';
 import 'verification_cubit.dart';
 
@@ -56,7 +57,7 @@ class _OrganizationNamePageState extends State<OrganizationNamePage> {
     // Persist org name and navigate
     final storage = sl<StorageService>();
     storage.savePendingOrgName(organizationName).whenComplete(() async {
-      await sl<VerificationCubit>().setOrgName(organizationName);
+      await context.read<VerificationCubit>().setOrgName(organizationName);
       if (!mounted) return;
       setState(() => _isLoading = false);
       context.pushToSocialMediaSelection();

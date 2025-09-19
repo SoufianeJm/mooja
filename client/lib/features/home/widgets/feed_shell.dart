@@ -59,13 +59,11 @@ class _FeedShellState extends State<FeedShell> {
               content: Text('Contribute tapped - Navigate to create protest'),
             ),
           );
-          // TODO(feed, 2024-12-17): Navigate to contribution board
         },
         onAddTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Add tapped - Quick action')),
           );
-          // TODO(feed, 2024-12-17): Show menu
         },
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
