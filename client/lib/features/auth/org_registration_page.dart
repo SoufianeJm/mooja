@@ -100,12 +100,14 @@ class _OrgRegistrationPageState extends State<OrgRegistrationPage> {
 
       // Register the organization account
       final response = await apiService.register(
-        name: orgName,
-        username: username,
-        password: password,
-        country: country,
-        socialMediaPlatform: socialPlatform,
-        socialMediaHandle: socialHandle,
+        OrganizationRegistrationData(
+          name: orgName,
+          username: username,
+          password: password,
+          country: country,
+          socialMediaPlatform: socialPlatform,
+          socialMediaHandle: socialHandle,
+        ),
       );
 
       if (!mounted) return;

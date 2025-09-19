@@ -114,99 +114,42 @@ class ApiService {
     required String applicationId,
     required String inviteCode,
   }) async {
-    try {
-      final response = await _dio.post(
-        '/orgs/verify-code',
-        data: {'applicationId': applicationId, 'inviteCode': inviteCode},
-      );
-      return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Verify organization with invite code (authenticated endpoint - legacy)
-  Future<Map<String, dynamic>> verifyOrgWithCode({
-    required String inviteCode,
-  }) async {
-    try {
-      final response = await _dio.post(
-        '/orgs/verify-with-code',
-        data: {'inviteCode': inviteCode},
-      );
-      return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Get verification status by username
-  /// Deprecated: Prefer getOrgStatusByApplicationId
-  Future<String> getOrgStatusByUsername(String username) async {
-    try {
-      final response = await _dio.get(
-        '/orgs/status',
-        queryParameters: {'username': username},
-      );
-      final data = response.data as Map<String, dynamic>;
-      return (data['verificationStatus'] as String?) ?? 'pending';
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
+    return _makeRequest<Map<String, dynamic>>(
+      'POST',
+      '/orgs/verify-code',
+      data: {'applicationId': applicationId, 'inviteCode': inviteCode},
+    );
   }
 
   /// Get verification status by application id (org.id)
   Future<String> getOrgStatusByApplicationId(String applicationId) async {
-    try {
-      final response = await _dio.get(
-        '/orgs/applications/$applicationId/status',
-      );
-      final data = response.data as Map<String, dynamic>;
-      return (data['verificationStatus'] as String?) ?? 'pending';
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
+    final data = await _makeRequest<Map<String, dynamic>>(
+      'GET',
+      '/orgs/applications/$applicationId/status',
+    );
+    return (data['verificationStatus'] as String?) ?? 'pending';
   }
 
   /// Register organization account after verification
-  Future<Map<String, dynamic>> register({
-    required String name,
-    required String username,
-    required String password,
-    required String country,
-    String? socialMediaPlatform,
-    String? socialMediaHandle,
-    String? pictureUrl,
-  }) async {
+  Future<Map<String, dynamic>> register(
+    OrganizationRegistrationData data,
+  ) async {
     try {
       final response = await _dio.post(
         '/auth/org/register',
         data: {
-          'name': name,
-          'username': username,
-          'password': password,
-          'country': country,
-          if (socialMediaPlatform != null)
-            'socialMediaPlatform': socialMediaPlatform,
-          if (socialMediaHandle != null) 'socialMediaHandle': socialMediaHandle,
-          if (pictureUrl != null) 'pictureUrl': pictureUrl,
+          'name': data.name,
+          'username': data.username,
+          'password': data.password,
+          'country': data.country,
+          if (data.socialMediaPlatform != null)
+            'socialMediaPlatform': data.socialMediaPlatform,
+          if (data.socialMediaHandle != null)
+            'socialMediaHandle': data.socialMediaHandle,
+          if (data.pictureUrl != null) 'pictureUrl': data.pictureUrl,
         },
       );
       return response.data as Map<String, dynamic>;
-    } on DioException catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Get application id by username (fallback diagnostic)
-  Future<String?> getApplicationIdByUsername(String username) async {
-    try {
-      final response = await _dio.get(
-        '/orgs/by-username',
-        queryParameters: {'username': username},
-      );
-      final data = response.data as Map<String, dynamic>?;
-      return data?['id'] as String?;
     } on DioException catch (e) {
       throw _handleError(e);
     }
@@ -275,6 +218,72 @@ class ApiService {
   ApiError _createUnexpectedError() {
     return ApiError('An unexpected error occurred', 500);
   }
+
+  /// Generic request method to eliminate duplication
+  Future<T> _makeRequest<T>(
+    String method,
+    String endpoint, {
+    Map<String, dynamic>? data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    try {
+      late final Response response;
+
+      switch (method.toUpperCase()) {
+        case 'GET':
+          response = await _dio.get(endpoint, queryParameters: queryParameters);
+          break;
+        case 'POST':
+          response = await _dio.post(
+            endpoint,
+            data: data,
+            queryParameters: queryParameters,
+          );
+          break;
+        case 'PUT':
+          response = await _dio.put(
+            endpoint,
+            data: data,
+            queryParameters: queryParameters,
+          );
+          break;
+        case 'DELETE':
+          response = await _dio.delete(
+            endpoint,
+            data: data,
+            queryParameters: queryParameters,
+          );
+          break;
+        default:
+          throw ArgumentError('Unsupported HTTP method: $method');
+      }
+
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+}
+
+/// Organization registration data
+class OrganizationRegistrationData {
+  final String name;
+  final String username;
+  final String password;
+  final String country;
+  final String? socialMediaPlatform;
+  final String? socialMediaHandle;
+  final String? pictureUrl;
+
+  const OrganizationRegistrationData({
+    required this.name,
+    required this.username,
+    required this.password,
+    required this.country,
+    this.socialMediaPlatform,
+    this.socialMediaHandle,
+    this.pictureUrl,
+  });
 }
 
 /// API Error class
