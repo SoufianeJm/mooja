@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:io' show Platform;
 import '../models/protest_model.dart';
+import '../domain/domain_objects.dart';
 
 class ApiService {
   static String get _baseUrl {
@@ -49,13 +50,13 @@ class ApiService {
 
   /// Get protests with optional filtering
   Future<PaginatedProtests> getProtests({
-    String? country,
+    Country? country,
     String? cursor,
     int? limit,
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (country != null) queryParams['country'] = country;
+      if (country != null) queryParams['country'] = country.value;
       if (cursor != null) queryParams['cursor'] = cursor;
       if (limit != null) queryParams['limit'] = limit;
 
@@ -71,11 +72,11 @@ class ApiService {
   }
 
   /// Get organizations with optional country filtering
-  Future<List<Organization>> getOrganizations({String? country}) async {
+  Future<List<Organization>> getOrganizations({Country? country}) async {
     try {
       final response = await _dio.get(
         '/orgs',
-        queryParameters: {if (country != null) 'country': country},
+        queryParameters: {if (country != null) 'country': country.value},
       );
       return (response.data as List)
           .map((item) => Organization.fromJson(item))
@@ -87,20 +88,21 @@ class ApiService {
 
   /// Request organization verification
   Future<Map<String, dynamic>> requestOrgVerification({
-    required String name,
-    required String country,
-    String? socialMediaPlatform,
-    String? socialMediaHandle,
+    required OrganizationName name,
+    required Country country,
+    SocialMediaPlatform? socialMediaPlatform,
+    SocialMediaHandle? socialMediaHandle,
   }) async {
     try {
       final response = await _dio.post(
         '/orgs/verify',
         data: {
-          'name': name,
-          'country': country,
+          'name': name.value,
+          'country': country.value,
           if (socialMediaPlatform != null)
-            'socialMediaPlatform': socialMediaPlatform,
-          if (socialMediaHandle != null) 'socialMediaHandle': socialMediaHandle,
+            'socialMediaPlatform': socialMediaPlatform.value,
+          if (socialMediaHandle != null)
+            'socialMediaHandle': socialMediaHandle.value,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -111,21 +113,26 @@ class ApiService {
 
   /// Verify organization invite code (public endpoint for pre-registration)
   Future<Map<String, dynamic>> verifyOrgCode({
-    required String applicationId,
-    required String inviteCode,
+    required ApplicationId applicationId,
+    required InviteCode inviteCode,
   }) async {
     return _makeRequest<Map<String, dynamic>>(
       'POST',
       '/orgs/verify-code',
-      data: {'applicationId': applicationId, 'inviteCode': inviteCode},
+      data: {
+        'applicationId': applicationId.value,
+        'inviteCode': inviteCode.value,
+      },
     );
   }
 
   /// Get verification status by application id (org.id)
-  Future<String> getOrgStatusByApplicationId(String applicationId) async {
+  Future<String> getOrgStatusByApplicationId(
+    ApplicationId applicationId,
+  ) async {
     final data = await _makeRequest<Map<String, dynamic>>(
       'GET',
-      '/orgs/applications/$applicationId/status',
+      '/orgs/applications/${applicationId.value}/status',
     );
     return (data['verificationStatus'] as String?) ?? 'pending';
   }
@@ -138,15 +145,15 @@ class ApiService {
       final response = await _dio.post(
         '/auth/org/register',
         data: {
-          'name': data.name,
-          'username': data.username,
-          'password': data.password,
-          'country': data.country,
+          'name': data.name.value,
+          'username': data.username.value,
+          'password': data.password.value,
+          'country': data.country.value,
           if (data.socialMediaPlatform != null)
-            'socialMediaPlatform': data.socialMediaPlatform,
+            'socialMediaPlatform': data.socialMediaPlatform!.value,
           if (data.socialMediaHandle != null)
-            'socialMediaHandle': data.socialMediaHandle,
-          if (data.pictureUrl != null) 'pictureUrl': data.pictureUrl,
+            'socialMediaHandle': data.socialMediaHandle!.value,
+          if (data.pictureUrl != null) 'pictureUrl': data.pictureUrl!.value,
         },
       );
       return response.data as Map<String, dynamic>;
@@ -267,13 +274,13 @@ class ApiService {
 
 /// Organization registration data
 class OrganizationRegistrationData {
-  final String name;
-  final String username;
-  final String password;
-  final String country;
-  final String? socialMediaPlatform;
-  final String? socialMediaHandle;
-  final String? pictureUrl;
+  final OrganizationName name;
+  final Username username;
+  final Password password;
+  final Country country;
+  final SocialMediaPlatform? socialMediaPlatform;
+  final SocialMediaHandle? socialMediaHandle;
+  final PictureUrl? pictureUrl;
 
   const OrganizationRegistrationData({
     required this.name,

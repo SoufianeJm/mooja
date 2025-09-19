@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/storage_service.dart';
+import '../../core/domain/domain_objects.dart';
 
 class VerificationState {
   final String? countryCode;
@@ -98,11 +99,17 @@ class VerificationCubit extends Cubit<VerificationState> {
       final normalizedHandle = (handle ?? '').startsWith('@')
           ? (handle ?? '')
           : '@${handle ?? ''}';
+
+      // Map common alias 'x' to 'twitter'
+      final normalizedPlatform = platform.toLowerCase() == 'x'
+          ? 'twitter'
+          : platform.toLowerCase();
+
       final result = await api.requestOrgVerification(
-        name: name,
-        country: country,
-        socialMediaPlatform: platform,
-        socialMediaHandle: normalizedHandle,
+        name: OrganizationName(name),
+        country: Country(country),
+        socialMediaPlatform: SocialMediaPlatform(normalizedPlatform),
+        socialMediaHandle: SocialMediaHandle(normalizedHandle),
       );
       // Persist backend-generated identifiers for consistent status lookups
       final backendUsername = result['org']?['username'] as String?;

@@ -6,6 +6,7 @@ import '../../core/constants/countries.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/di/service_locator.dart';
+import '../../core/domain/domain_objects.dart' as domain;
 import 'widgets/date_section_header.dart';
 import 'widgets/protest_card.dart';
 import 'widgets/empty_state_widget.dart';
@@ -88,7 +89,9 @@ class _ProtestorFeedPageState extends State<ProtestorFeedPage> {
 
     try {
       final apiService = sl<ApiService>();
-      final orgs = await apiService.getOrganizations(country: countryCode);
+      final orgs = await apiService.getOrganizations(
+        country: domain.Country(countryCode),
+      );
       final hasOrgs = orgs.isNotEmpty;
       _orgsCache[countryCode] = hasOrgs;
       return hasOrgs;

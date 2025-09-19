@@ -8,6 +8,7 @@ import '../../core/di/service_locator.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/services/user_context_service.dart';
+import '../../core/domain/domain_objects.dart';
 
 class OrgRegistrationPage extends StatefulWidget {
   final String? prefilledUsername;
@@ -101,12 +102,21 @@ class _OrgRegistrationPageState extends State<OrgRegistrationPage> {
       // Register the organization account
       final response = await apiService.register(
         OrganizationRegistrationData(
-          name: orgName,
-          username: username,
-          password: password,
-          country: country,
-          socialMediaPlatform: socialPlatform,
-          socialMediaHandle: socialHandle,
+          name: OrganizationName(orgName),
+          username: Username(username),
+          password: Password(password),
+          country: Country(country),
+          socialMediaPlatform: socialPlatform != null
+              ? SocialMediaPlatform(
+                  (socialPlatform.toLowerCase() == 'x'
+                          ? 'twitter'
+                          : socialPlatform)
+                      .toLowerCase(),
+                )
+              : null,
+          socialMediaHandle: socialHandle != null
+              ? SocialMediaHandle(socialHandle)
+              : null,
         ),
       );
 

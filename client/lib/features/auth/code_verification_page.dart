@@ -9,6 +9,7 @@ import '../../core/di/service_locator.dart';
 import '../../core/services/storage_service.dart';
 import '../../core/services/api_service.dart';
 import '../../core/router/app_router.dart';
+import '../../core/domain/domain_objects.dart';
 
 class CodeVerificationPage extends StatefulWidget {
   const CodeVerificationPage({super.key});
@@ -84,8 +85,8 @@ class _CodeVerificationPageState extends State<CodeVerificationPage> {
 
       // Verify the code with the backend using new public endpoint
       final result = await apiService.verifyOrgCode(
-        applicationId: applicationId,
-        inviteCode: code,
+        applicationId: ApplicationId(applicationId),
+        inviteCode: InviteCode(code),
       );
 
       if (!mounted) return;

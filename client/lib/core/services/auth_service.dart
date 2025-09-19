@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'api_service.dart';
 import 'storage_service.dart';
+import '../domain/domain_objects.dart';
 
 class AuthService {
   final ApiService _apiService;
@@ -10,15 +11,15 @@ class AuthService {
 
   /// Login with username and password (with retry logic)
   Future<AuthResult> login({
-    required String username,
-    required String password,
+    required Username username,
+    required Password password,
     int retries = 2,
   }) async {
     for (int attempt = 0; attempt <= retries; attempt++) {
       try {
         final response = await _apiService.dio.post(
           '/auth/org/login',
-          data: {'username': username, 'password': password},
+          data: {'username': username.value, 'password': password.value},
         );
 
         if (response.statusCode == 200 || response.statusCode == 201) {

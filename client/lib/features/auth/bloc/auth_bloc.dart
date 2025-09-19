@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/domain/domain_objects.dart';
 
 // Events
 abstract class AuthEvent extends Equatable {
@@ -87,9 +88,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(const AuthLoading());
 
     try {
+      final username = Username(event.username);
+      final password = Password(event.password);
+
       final result = await _authService.login(
-        username: event.username,
-        password: event.password,
+        username: username,
+        password: password,
       );
 
       if (result.isSuccess) {
@@ -103,7 +107,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
     } catch (e) {
       if (!isClosed) {
-        emit(const AuthFailure('Something went wrong. Please try again.'));
+        emit(AuthFailure('Login failed: ${e.toString()}'));
       }
     }
   }

@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/models/protest_model.dart';
+import '../../../core/domain/domain_objects.dart';
 import 'protests_event.dart';
 import 'protests_state.dart';
 
@@ -29,7 +30,7 @@ class ProtestsBloc extends Bloc<ProtestsEvent, ProtestsState> {
       }
 
       final result = await _apiService.getProtests(
-        country: event.country,
+        country: event.country != null ? Country(event.country!) : null,
         limit: 20,
       );
 
@@ -83,7 +84,9 @@ class ProtestsBloc extends Bloc<ProtestsEvent, ProtestsState> {
       }
 
       final result = await _apiService.getProtests(
-        country: currentState.selectedCountry,
+        country: currentState.selectedCountry != null
+            ? Country(currentState.selectedCountry!)
+            : null,
         cursor: currentState.nextCursor,
         limit: 20,
       );
