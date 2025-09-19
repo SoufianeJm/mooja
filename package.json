@@ -1,17 +1,11 @@
 {
-  "name": "mooja-app",
+  "name": "mooja-backend",
   "version": "1.0.0",
-  "description": "Mooja protest organization app - Backend and Frontend",
+  "description": "Mooja protest organization app - Backend API",
   "private": true,
-  "workspaces": [
-    "server"
-  ],
   "scripts": {
-    "build": "cd server && npm run build",
-    "start": "cd server && npm run start:prod",
-    "dev": "cd server && npm run start:dev",
-    "install:server": "cd server && npm install",
-    "install:client": "cd client && flutter pub get"
+    "start": "cd server && npm start",
+    "build": "cd server && npm run build"
   },
   "engines": {
     "node": ">=18.0.0"
