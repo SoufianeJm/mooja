@@ -20,7 +20,6 @@ fly.toml
 migrate_working_dir/
 /journeys
 .cursor
-/server/*
 
 # IntelliJ related
 *.iml
